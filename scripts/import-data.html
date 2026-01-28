@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SnapList Data Import</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 { margin-top: 0; color: #333; }
+    h2 { color: #666; font-size: 1.1rem; margin-top: 0; }
+    .step {
+      background: #f0f0f0;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+    }
+    .step-num {
+      background: #667eea;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin: 8px 0;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    textarea { min-height: 100px; font-family: monospace; font-size: 12px; }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status {
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      display: none;
+    }
+    .status.error { display: block; background: #fee; color: #c00; }
+    .status.success { display: block; background: #efe; color: #060; }
+    .status.info { display: block; background: #eef; color: #006; }
+    .progress { margin-top: 12px; font-size: 14px; color: #666; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>SnapList Data Import</h1>
+    <p>Import your exported Supabase data into Firebase.</p>
+
+    <div class="step">
+      <span class="step-num">1</span>
+      <strong>Enter your Firebase config</strong><br>
+      <small>Get this from Firebase Console > Project Settings > Your apps</small>
+    </div>
+
+    <textarea id="firebaseConfig" placeholder='{
+  "apiKey": "...",
+  "authDomain": "...",
+  "projectId": "...",
+  "storageBucket": "...",
+  "messagingSenderId": "...",
+  "appId": "..."
+}'></textarea>
+
+    <div class="step">
+      <span class="step-num">2</span>
+      <strong>Create an account or sign in</strong>
+    </div>
+
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <div class="step">
+      <span class="step-num">3</span>
+      <strong>Select your export file</strong>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json">
+
+    <button id="importBtn">Import Data</button>
+
+    <div id="status" class="status"></div>
+    <div id="progress" class="progress"></div>
+  </div>
+
+  <div class="card">
+    <h2>After importing:</h2>
+    <ol>
+      <li>Copy your Firebase config to <code>.env.local</code> in the snaplist-v2 folder</li>
+      <li>Run <code>pnpm dev</code> to start the app</li>
+      <li>Sign in with the same email/password you used here</li>
+    </ol>
+  </div>
+
+  <script>
+    const configInput = document.getElementById('firebaseConfig');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const fileInput = document.getElementById('fileInput');
+    const importBtn = document.getElementById('importBtn');
+    const statusEl = document.getElementById('status');
+    const progressEl = document.getElementById('progress');
+
+    let db = null;
+    let auth = null;
+
+    function showStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = 'status ' + type;
+    }
+
+    function showProgress(message) {
+      progressEl.textContent = message;
+    }
+
+    importBtn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const file = fileInput.files[0];
+
+      // Validate inputs
+      if (!configInput.value.trim()) {
+        showStatus('Please enter your Firebase config', 'error');
+        return;
+      }
+      if (!email || !password) {
+        showStatus('Please enter email and password', 'error');
+        return;
+      }
+      if (!file) {
+        showStatus('Please select your export file', 'error');
+        return;
+      }
+
+      importBtn.disabled = true;
+
+      try {
+        // Parse Firebase config
+        showProgress('Parsing Firebase config...');
+        let config;
+        try {
+          config = JSON.parse(configInput.value.trim());
+        } catch {
+          showStatus('Invalid Firebase config JSON', 'error');
+          importBtn.disabled = false;
+          return;
+        }
+
+        // Initialize Firebase
+        showProgress('Initializing Firebase...');
+        const app = firebase.initializeApp(config);
+        auth = firebase.auth();
+        db = firebase.firestore();
+
+        // Create account or sign in
+        showProgress('Creating account...');
+        try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          showProgress('Account created!');
+        } catch (err) {
+          if (err.code === 'auth/email-already-in-use') {
+            showProgress('Signing in to existing account...');
+            await auth.signInWithEmailAndPassword(email, password);
+          } else {
+            throw err;
+          }
+        }
+
+        const userId = auth.currentUser.uid;
+        showProgress(`Authenticated as ${email}`);
+
+        // Read the file
+        showProgress('Reading export file...');
+        const fileContent = await file.text();
+        const data = JSON.parse(fileContent);
+
+        if (!data.notes || !Array.isArray(data.notes)) {
+          showStatus('Invalid export file: missing notes array', 'error');
+          importBtn.disabled = false;
+          return;
+        }
+
+        // Import notes
+        const total = data.notes.length;
+        let imported = 0;
+        let failed = 0;
+
+        showProgress(`Importing ${total} notes...`);
+
+        for (const note of data.notes) {
+          try {
+            // Convert Supabase format to Firebase format
+            const firebaseNote = {
+              userId: userId,
+              title: note.title || '',
+              notes: note.notes || '',
+              raw: note.raw || '',
+              tags: note.tags || [],
+              hashTags: note.hash_tags || [],
+              fields: note.fields || {},
+              timestamp: note.timestamp || Date.now(),
+            };
+
+            await db.collection('notes').add(firebaseNote);
+            imported++;
+            showProgress(`Imported ${imported}/${total} notes...`);
+          } catch (err) {
+            console.error('Failed to import note:', note.title, err);
+            failed++;
+          }
+        }
+
+        // Import custom subtypes if any
+        if (data.customSubtypes && data.customSubtypes.length > 0) {
+          showProgress('Importing custom subtypes...');
+          for (const subtype of data.customSubtypes) {
+            try {
+              await db.collection('users').doc(userId).collection('customSubtypes').add({
+                categoryKey: subtype.category_key,
+                subtypeName: subtype.subtype_name,
+                icon: subtype.icon,
+                createdAt: new Date(),
+              });
+            } catch (err) {
+              console.error('Failed to import subtype:', err);
+            }
+          }
+        }
+
+        showStatus(`Import complete! ${imported} notes imported${failed > 0 ? `, ${failed} failed` : ''}.`, 'success');
+        showProgress('');
+
+        // Sign out
+        await auth.signOut();
+
+      } catch (error) {
+        console.error('Import error:', error);
+        showStatus('Error: ' + error.message, 'error');
+        showProgress('');
+      } finally {
+        importBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
