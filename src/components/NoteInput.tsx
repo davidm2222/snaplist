@@ -106,12 +106,19 @@ export function NoteInput({ onSubmit, disabled, notes = [] }: NoteInputProps) {
     setSuggestion('');
   }, [value, autocompleteData]);
 
+  const acceptSuggestion = () => {
+    if (suggestion) {
+      setValue(suggestion);
+      setSuggestion('');
+      inputRef.current?.focus();
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Tab to accept suggestion
     if (e.key === 'Tab' && suggestion) {
       e.preventDefault();
-      setValue(suggestion);
-      setSuggestion('');
+      acceptSuggestion();
     }
   };
 
@@ -161,10 +168,20 @@ export function NoteInput({ onSubmit, disabled, notes = [] }: NoteInputProps) {
           {isSubmitting ? '...' : 'Add'}
         </button>
       </div>
-      <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-600">
-        Format: <span className="font-mono">category: Title, key:value, #tag, notes</span>
-        {suggestion && <span className="ml-2 text-violet-500">Press Tab to autocomplete</span>}
-      </p>
+      {suggestion ? (
+        <button
+          type="button"
+          onClick={acceptSuggestion}
+          className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-xs font-medium active:scale-95 transition-transform"
+        >
+          {suggestion.slice(value.length)}
+          <span className="text-violet-400 dark:text-violet-500 hidden sm:inline">↹</span>
+        </button>
+      ) : (
+        <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-600">
+          Format: <span className="font-mono">category: Title, key:value, #tag, notes</span>
+        </p>
+      )}
     </form>
   );
 }
