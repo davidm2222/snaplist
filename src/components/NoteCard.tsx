@@ -11,12 +11,12 @@ interface NoteCardProps {
 }
 
 const CATEGORY_ACCENT: Record<string, string> = {
-  book: 'border-l-amber-500',
-  movie: 'border-l-rose-500',
-  show: 'border-l-sky-500',
-  restaurant: 'border-l-orange-500',
-  drink: 'border-l-teal-500',
-  activity: 'border-l-emerald-500',
+  book: 'border-l-amber-500 dark:border-l-amber-400',
+  movie: 'border-l-rose-500 dark:border-l-rose-400',
+  show: 'border-l-sky-500 dark:border-l-sky-400',
+  restaurant: 'border-l-orange-500 dark:border-l-orange-400',
+  drink: 'border-l-teal-500 dark:border-l-teal-400',
+  activity: 'border-l-emerald-500 dark:border-l-emerald-400',
   other: 'border-l-indigo-400 dark:border-l-indigo-500',
 };
 
