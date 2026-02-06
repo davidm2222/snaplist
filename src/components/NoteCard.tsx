@@ -17,7 +17,7 @@ const CATEGORY_ACCENT: Record<string, string> = {
   restaurant: 'border-l-orange-500',
   drink: 'border-l-teal-500',
   activity: 'border-l-emerald-500',
-  other: 'border-l-zinc-400 dark:border-l-zinc-600',
+  other: 'border-l-violet-400 dark:border-l-violet-500',
 };
 
 const CATEGORY_BADGE: Record<string, string> = {

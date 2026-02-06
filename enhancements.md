@@ -8,17 +8,13 @@ GitHub Pages limits the app to static export only (no API routes, no SSR, no mid
 ### Add category/resource type to edit modal
 The edit modal shows title, fields, hashtags, and notes -- but not the category. If something was miscategorized (e.g., a movie tagged as a TV show), there's no way to fix it without deleting and re-creating. Add a category selector to the edit form.
 
-## Bugs
-
-### "Other" tab shows no results
-**Root cause:** Notes with empty `tags: []` arrays (e.g., from imports) get counted under "other" via the `note.tags[0] || 'other'` fallback in SnapList, but filtering uses `note.tags.includes('other')` which returns false for empty arrays. Counted but never shown.
-**Fix:** Apply the same fallback logic in the filter, or backfill empty tags arrays with `['other']`.
-
-### "Other" cards have mismatched left border
-**Root cause:** Every category accent is a saturated color (amber-500, rose-500, sky-500, etc.) but "other" uses `zinc-400 dark:zinc-600`, which is too close to the default card border color and looks like a rendering glitch rather than an intentional accent.
-**Fix:** Give "other" a more distinct accent color (e.g., slate-500 or indigo-400).
-
 ## Completed
+
+### Fix "Other" tab showing no results
+Filter now uses `tags[0] || 'other'` fallback (matching counting logic) so notes with empty tags arrays appear under the Other tab.
+
+### Fix "Other" cards mismatched left border
+Changed accent from zinc-400 (too close to default border) to violet-400/500 for a distinct, intentional look.
 
 ### Compact view
 Single-line note entries with toggle button. Shows icon, title, category badge, first hashtag, and timestamp. Click row to edit. Tighter spacing (space-y-1) in compact mode.
