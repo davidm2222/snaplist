@@ -63,7 +63,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+        <h2 className="text-lg font-semibold font-serif text-zinc-900 dark:text-zinc-100 mb-4">
           Edit Note
         </h2>
 
@@ -77,7 +77,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
             />
           </div>
 
@@ -90,7 +90,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
               <button
                 type="button"
                 onClick={addField}
-                className="text-xs text-violet-600 hover:text-violet-700 dark:text-violet-400"
+                className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
               >
                 + Add field
               </button>
@@ -105,19 +105,19 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
                     type="text"
                     value={value}
                     onChange={(e) => updateField(key, e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    className="flex-1 px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
                   />
                   <button
                     type="button"
                     onClick={() => removeField(key)}
                     className="px-2 text-zinc-400 hover:text-red-500"
                   >
-                    ×
+                    &times;
                   </button>
                 </div>
               ))}
               {Object.keys(fields).length === 0 && (
-                <p className="text-sm text-zinc-400 dark:text-zinc-600 italic">
+                <p className="text-sm text-zinc-400 dark:text-zinc-500 italic">
                   No fields
                 </p>
               )}
@@ -134,7 +134,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
               value={hashTags}
               onChange={(e) => setHashTags(e.target.value)}
               placeholder="tag1, tag2, tag3"
-              className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
             />
             <p className="mt-1 text-xs text-zinc-400">Separate with commas</p>
           </div>
@@ -148,7 +148,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 resize-none"
             />
           </div>
 
@@ -164,7 +164,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium hover:from-violet-700 hover:to-purple-700 disabled:opacity-50 transition-all"
+              className="flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-900 font-semibold disabled:opacity-50 transition-all"
             >
               {isSubmitting ? 'Saving...' : 'Save'}
             </button>

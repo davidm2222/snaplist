@@ -81,7 +81,7 @@ export default function ImportPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -104,7 +104,7 @@ export default function ImportPage() {
         </Link>
 
         <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+          <h1 className="text-xl font-semibold font-serif text-zinc-900 dark:text-zinc-100 mb-2">
             Import Data
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
@@ -113,8 +113,12 @@ export default function ImportPage() {
 
           {status === 'success' ? (
             <div className="text-center py-6">
-              <div className="text-4xl mb-3">🎉</div>
-              <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-1">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-3">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </div>
+              <p className="text-lg font-medium font-serif text-zinc-900 dark:text-zinc-100 mb-1">
                 Import Complete!
               </p>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
@@ -122,7 +126,7 @@ export default function ImportPage() {
               </p>
               <Link
                 href="/"
-                className="inline-flex px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium hover:from-violet-700 hover:to-purple-700 transition-all"
+                className="inline-flex px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-900 font-semibold transition-all"
               >
                 View Your Notes
               </Link>
@@ -141,11 +145,11 @@ export default function ImportPage() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={status === 'importing'}
-                className="w-full py-4 px-4 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-violet-500 hover:text-violet-600 dark:hover:border-violet-500 dark:hover:text-violet-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full py-4 px-4 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-amber-500 hover:text-amber-600 dark:hover:border-amber-400 dark:hover:text-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {status === 'importing' ? (
                   <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
                     {progress}
                   </span>
                 ) : (
@@ -164,9 +168,9 @@ export default function ImportPage() {
                 </p>
               )}
 
-              <p className="mt-4 text-xs text-zinc-400 dark:text-zinc-600 text-center">
+              <p className="mt-4 text-xs text-zinc-400 dark:text-zinc-500 text-center">
                 Looking for your export file? It should be named<br />
-                <code className="text-zinc-500">snaplist-export-*.json</code>
+                <code className="text-zinc-500 dark:text-zinc-400">snaplist-export-*.json</code>
               </p>
             </>
           )}

@@ -29,7 +29,7 @@ export function AuthModal({ isOpen }: AuthModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold font-serif tracking-tight text-zinc-900 dark:text-amber-400">
             SnapList
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
@@ -71,7 +71,7 @@ export function AuthModal({ isOpen }: AuthModalProps) {
           )}
         </div>
 
-        <p className="mt-6 text-center text-xs text-zinc-400 dark:text-zinc-600">
+        <p className="mt-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
           Sign in to sync your notes across devices
         </p>
       </div>

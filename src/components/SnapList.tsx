@@ -11,6 +11,7 @@ import { SearchBar } from './SearchBar';
 import { NoteCard } from './NoteCard';
 import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
+import { CategoryIcon, SearchIcon } from './Icons';
 
 export function SnapList() {
   const { user, loading: authLoading } = useAuth();
@@ -87,7 +88,7 @@ export function SnapList() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p className="text-zinc-500 dark:text-zinc-400">Loading...</p>
         </div>
       </div>
@@ -98,7 +99,7 @@ export function SnapList() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <Header />
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-5">
         {/* Input with autocomplete */}
         <NoteInput onSubmit={addNote} disabled={notesLoading} notes={notes} />
 
@@ -124,12 +125,16 @@ export function SnapList() {
         {/* Notes List */}
         {notesLoading ? (
           <div className="text-center py-12">
-            <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
           </div>
         ) : filteredNotes.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-3">
-              {searchQuery ? '🔍' : CATEGORIES[activeTab].icon}
+            <div className="mb-3 flex justify-center">
+              {searchQuery ? (
+                <SearchIcon className="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
+              ) : (
+                <CategoryIcon category={activeTab} className="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
+              )}
             </div>
             <p className="text-zinc-500 dark:text-zinc-400">
               {searchQuery
@@ -140,7 +145,7 @@ export function SnapList() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filteredNotes.map(note => (
               <NoteCard
                 key={note.id}

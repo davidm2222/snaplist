@@ -9,10 +9,10 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-200 dark:border-zinc-800">
       <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold font-serif tracking-tight text-zinc-900 dark:text-amber-400">
             SnapList
           </h1>
-          <p className="text-xs text-zinc-400 dark:text-zinc-600 hidden sm:block">
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 hidden sm:block">
             everything in its place
           </p>
         </div>
