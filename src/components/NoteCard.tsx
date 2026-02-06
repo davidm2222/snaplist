@@ -17,7 +17,7 @@ const CATEGORY_ACCENT: Record<string, string> = {
   restaurant: 'border-l-orange-500',
   drink: 'border-l-teal-500',
   activity: 'border-l-emerald-500',
-  other: 'border-l-zinc-400 dark:border-l-zinc-500',
+  other: 'border-l-indigo-400 dark:border-l-indigo-500',
 };
 
 const CATEGORY_BADGE: Record<string, string> = {
@@ -27,7 +27,7 @@ const CATEGORY_BADGE: Record<string, string> = {
   restaurant: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   drink: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
   activity: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  other: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+  other: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
 };
 
 function formatRelativeTime(timestamp: number): string {

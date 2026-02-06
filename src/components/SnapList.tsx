@@ -13,6 +13,14 @@ import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
 import { CategoryIcon, SearchIcon, ListIcon, CardIcon } from './Icons';
 
+const KNOWN_CATEGORIES = new Set<string>(['book', 'movie', 'show', 'restaurant', 'drink', 'activity', 'other']);
+
+function resolveCategory(note: Note): string {
+  const tag = note.tags?.[0];
+  if (tag && KNOWN_CATEGORIES.has(tag)) return tag;
+  return 'other';
+}
+
 export function SnapList() {
   const { user, loading: authLoading } = useAuth();
   const { notes, loading: notesLoading, addNote, updateNote, deleteNote } = useNotes();
@@ -25,7 +33,7 @@ export function SnapList() {
   const noteCounts = useMemo(() => {
     const counts: Record<string, number> = { all: notes.length };
     for (const note of notes) {
-      const category = note.tags[0] || 'other';
+      const category = resolveCategory(note);
       counts[category] = (counts[category] || 0) + 1;
     }
     return counts;
@@ -54,10 +62,7 @@ export function SnapList() {
     } else {
       // No search query - filter by category tab
       if (activeTab !== 'all') {
-        filtered = filtered.filter(note => {
-          const noteCategory = note.tags[0] || 'other';
-          return noteCategory === activeTab;
-        });
+        filtered = filtered.filter(note => resolveCategory(note) === activeTab);
       }
     }
 
