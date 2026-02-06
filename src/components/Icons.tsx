@@ -123,6 +123,25 @@ export function TrashIcon({ className = defaultClass }: IconProps) {
   );
 }
 
+export function ListIcon({ className = defaultClass }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18" />
+      <path d="M3 12h18" />
+      <path d="M3 18h18" />
+    </svg>
+  );
+}
+
+export function CardIcon({ className = defaultClass }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="7" rx="2" />
+      <rect x="2" y="14" width="20" height="7" rx="2" />
+    </svg>
+  );
+}
+
 // Map category keys to icon components
 const CATEGORY_ICONS: Record<string, React.ComponentType<IconProps>> = {
   all: GridIcon,

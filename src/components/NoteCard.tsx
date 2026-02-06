@@ -7,6 +7,7 @@ interface NoteCardProps {
   note: Note;
   onEdit?: (note: Note) => void;
   onDelete?: (id: string) => void;
+  compact?: boolean;
 }
 
 const CATEGORY_ACCENT: Record<string, string> = {
@@ -43,11 +44,38 @@ function formatRelativeTime(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString();
 }
 
-export function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
+export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
   const category = note.tags[0] || 'other';
   const categoryData = CATEGORIES[category as keyof typeof CATEGORIES] || CATEGORIES.other;
   const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other;
   const badgeClass = CATEGORY_BADGE[category] || CATEGORY_BADGE.other;
+
+  if (compact) {
+    return (
+      <div
+        onClick={() => onEdit?.(note)}
+        className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} cursor-pointer transition-all hover:shadow-md`}
+      >
+        <div className="flex items-center gap-2 px-3 py-2">
+          <CategoryIcon category={category} className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+          <span className="font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 capitalize truncate">
+            {note.title}
+          </span>
+          <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${badgeClass}`}>
+            {categoryData.name}
+          </span>
+          {note.hashTags.length > 0 && (
+            <span className="text-[11px] text-teal-500 dark:text-teal-400 truncate hidden sm:inline">
+              #{note.hashTags[0]}{note.hashTags.length > 1 && ` +${note.hashTags.length - 1}`}
+            </span>
+          )}
+          <span className="text-[11px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap tabular-nums ml-auto shrink-0">
+            {formatRelativeTime(note.timestamp)}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} transition-all hover:shadow-md`}>

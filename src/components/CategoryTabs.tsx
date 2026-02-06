@@ -13,8 +13,8 @@ const TAB_ORDER: (CategoryKey | 'all')[] = ['all', 'book', 'movie', 'show', 'res
 
 export function CategoryTabs({ activeTab, onTabChange, noteCounts = {} }: CategoryTabsProps) {
   return (
-    <div className="w-full overflow-x-auto scrollbar-hide">
-      <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl min-w-max">
+    <div className="w-full overflow-x-auto scrollbar-hide sm:overflow-x-visible">
+      <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl min-w-max sm:min-w-0 sm:flex-wrap">
         {TAB_ORDER.map((key) => {
           const category = CATEGORIES[key];
           const count = noteCounts[key] || 0;
