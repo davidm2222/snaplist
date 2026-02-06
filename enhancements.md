@@ -13,8 +13,8 @@ The edit modal now shows a row of category buttons (with icons) at the top. Sele
 ### Fix "Other" tab showing no results
 Filter now uses `tags[0] || 'other'` fallback (matching counting logic) so notes with empty tags arrays appear under the Other tab.
 
-### Uniform left border accent
-Replaced per-category color-coded left borders with a single amber accent for all cards. Eliminates the visual inconsistency where "other" cards looked different (went through zinc → violet → slate before settling on one uniform color).
+### Fix "Other" cards left border accent
+Per-category colored left borders are intentional (amber, rose, sky, etc.). The "other" category now uses zinc-400/500 which reads as a neutral accent matching its badge color, distinct from the card's default 1px border.
 
 ### Compact view
 Single-line note entries with toggle button. Shows icon, title, category badge, first hashtag, and timestamp. Click row to edit. Tighter spacing (space-y-1) in compact mode.
