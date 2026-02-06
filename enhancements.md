@@ -5,16 +5,16 @@
 ### Migrate to Vercel
 GitHub Pages limits the app to static export only (no API routes, no SSR, no middleware). Move to Vercel for preview deploys, edge CDN, and the ability to incrementally adopt server features when needed.
 
-### Add category/resource type to edit modal
-The edit modal shows title, fields, hashtags, and notes -- but not the category. If something was miscategorized (e.g., a movie tagged as a TV show), there's no way to fix it without deleting and re-creating. Add a category selector to the edit form.
-
 ## Completed
+
+### Add category selector to edit modal
+The edit modal now shows a row of category buttons (with icons) at the top. Selecting a different category updates `tags` on save, so miscategorized notes can be fixed without deleting and re-creating.
 
 ### Fix "Other" tab showing no results
 Filter now uses `tags[0] || 'other'` fallback (matching counting logic) so notes with empty tags arrays appear under the Other tab.
 
-### Fix "Other" cards mismatched left border
-Changed accent from zinc-400 (too close to default border) to violet-400/500 for a distinct, intentional look.
+### Uniform left border accent
+Replaced per-category color-coded left borders with a single amber accent for all cards. Eliminates the visual inconsistency where "other" cards looked different (went through zinc → violet → slate before settling on one uniform color).
 
 ### Compact view
 Single-line note entries with toggle button. Shows icon, title, category badge, first hashtag, and timestamp. Click row to edit. Tighter spacing (space-y-1) in compact mode.

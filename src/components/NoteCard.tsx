@@ -10,15 +10,7 @@ interface NoteCardProps {
   compact?: boolean;
 }
 
-const CATEGORY_ACCENT: Record<string, string> = {
-  book: 'border-l-amber-500',
-  movie: 'border-l-rose-500',
-  show: 'border-l-sky-500',
-  restaurant: 'border-l-orange-500',
-  drink: 'border-l-teal-500',
-  activity: 'border-l-emerald-500',
-  other: 'border-l-violet-400 dark:border-l-violet-500',
-};
+const ACCENT_CLASS = 'border-l-amber-400 dark:border-l-amber-500';
 
 const CATEGORY_BADGE: Record<string, string> = {
   book: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
@@ -47,14 +39,13 @@ function formatRelativeTime(timestamp: number): string {
 export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
   const category = note.tags[0] || 'other';
   const categoryData = CATEGORIES[category as keyof typeof CATEGORIES] || CATEGORIES.other;
-  const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other;
   const badgeClass = CATEGORY_BADGE[category] || CATEGORY_BADGE.other;
 
   if (compact) {
     return (
       <div
         onClick={() => onEdit?.(note)}
-        className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} cursor-pointer transition-all hover:shadow-md`}
+        className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${ACCENT_CLASS} cursor-pointer transition-all hover:shadow-md`}
       >
         <div className="flex items-center gap-2 px-3 py-2">
           <CategoryIcon category={category} className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
@@ -78,7 +69,7 @@ export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
   }
 
   return (
-    <div className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} transition-all hover:shadow-md`}>
+    <div className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${ACCENT_CLASS} transition-all hover:shadow-md`}>
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-2">
