@@ -2,13 +2,15 @@
 
 ## Planned
 
-### Compact view
-Single-line note entries for faster scanning of long lists. Each row shows minimal metadata (title, category, timestamp) with fields/tags/notes hidden. Toggle between compact and expanded (current card) view.
-
-### Fix category tabs overflow
-Last tab gets cut off on narrower screens. Consider solutions like wrapping to 2 rows, left/right scroll arrows, or a collapsible overflow menu.
+(nothing currently)
 
 ## Completed
+
+### Compact view
+Single-line note entries with toggle button. Shows icon, title, category badge, first hashtag, and timestamp. Click row to edit. Tighter spacing (space-y-1) in compact mode.
+
+### Fix category tabs overflow
+Desktop: tabs wrap to 2 rows so nothing gets cut off. Mobile: horizontal scroll preserved (single row) to avoid too many rows on narrow screens.
 
 ### UI design refresh
 - Source Serif 4 serif font for titles/brand

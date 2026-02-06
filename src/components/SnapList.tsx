@@ -11,7 +11,7 @@ import { SearchBar } from './SearchBar';
 import { NoteCard } from './NoteCard';
 import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
-import { CategoryIcon, SearchIcon } from './Icons';
+import { CategoryIcon, SearchIcon, ListIcon, CardIcon } from './Icons';
 
 export function SnapList() {
   const { user, loading: authLoading } = useAuth();
@@ -19,6 +19,7 @@ export function SnapList() {
   const [activeTab, setActiveTab] = useState<CategoryKey | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
 
   // Calculate note counts per category
   const noteCounts = useMemo(() => {
@@ -122,7 +123,19 @@ export function SnapList() {
           )}
         </div>
 
-        {/* Notes List */}
+        {/* View toggle + Notes List */}
+        {filteredNotes.length > 0 && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => setViewMode(viewMode === 'compact' ? 'expanded' : 'compact')}
+              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors px-2 py-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              title={viewMode === 'compact' ? 'Expanded view' : 'Compact view'}
+            >
+              {viewMode === 'compact' ? <CardIcon className="w-3.5 h-3.5" /> : <ListIcon className="w-3.5 h-3.5" />}
+              {viewMode === 'compact' ? 'Expanded' : 'Compact'}
+            </button>
+          </div>
+        )}
         {notesLoading ? (
           <div className="text-center py-12">
             <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -145,13 +158,14 @@ export function SnapList() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className={viewMode === 'compact' ? 'space-y-1' : 'space-y-2'}>
             {filteredNotes.map(note => (
               <NoteCard
                 key={note.id}
                 note={note}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                compact={viewMode === 'compact'}
               />
             ))}
           </div>
