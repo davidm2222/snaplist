@@ -158,12 +158,12 @@ export function NoteInput({ onSubmit, disabled, notes = [] }: NoteInputProps) {
           onKeyDown={handleKeyDown}
           disabled={disabled || isSubmitting}
           placeholder="book: The Martian, genre:sci-fi, #space, amazing read!"
-          className="w-full px-4 py-3 pr-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all text-base"
+          className="w-full px-4 py-3 pr-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all text-base"
         />
         <button
           type="submit"
           disabled={!value.trim() || disabled || isSubmitting}
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-700 hover:to-purple-700 transition-all"
+          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-900 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isSubmitting ? '...' : 'Add'}
         </button>
@@ -172,14 +172,14 @@ export function NoteInput({ onSubmit, disabled, notes = [] }: NoteInputProps) {
         <button
           type="button"
           onClick={acceptSuggestion}
-          className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-xs font-medium active:scale-95 transition-transform"
+          className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium active:scale-95 transition-transform"
         >
           {suggestion.slice(value.length)}
-          <span className="text-violet-400 dark:text-violet-500 hidden sm:inline">↹</span>
+          <span className="text-amber-400 dark:text-amber-500 hidden sm:inline">Tab</span>
         </button>
       ) : (
-        <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-600">
-          Format: <span className="font-mono">category: Title, key:value, #tag, notes</span>
+        <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
+          Format: <span className="font-mono text-zinc-500 dark:text-zinc-400">category: Title, key:value, #tag, notes</span>
         </p>
       )}
     </form>
