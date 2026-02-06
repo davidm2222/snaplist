@@ -54,7 +54,10 @@ export function SnapList() {
     } else {
       // No search query - filter by category tab
       if (activeTab !== 'all') {
-        filtered = filtered.filter(note => note.tags.includes(activeTab));
+        filtered = filtered.filter(note => {
+          const noteCategory = note.tags[0] || 'other';
+          return noteCategory === activeTab;
+        });
       }
     }
 
