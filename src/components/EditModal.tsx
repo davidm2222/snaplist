@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { Note } from '@/types';
+import { Note, CATEGORIES, CategoryKey } from '@/types';
+import { CategoryIcon } from './Icons';
 
 interface EditModalProps {
   note: Note;
@@ -10,11 +11,18 @@ interface EditModalProps {
 }
 
 export function EditModal({ note, onSave, onClose }: EditModalProps) {
+  const [category, setCategory] = useState<CategoryKey>(
+    (note.tags[0] as CategoryKey) || 'other'
+  );
   const [title, setTitle] = useState(note.title);
   const [fields, setFields] = useState<Record<string, string>>(note.fields);
   const [hashTags, setHashTags] = useState(note.hashTags.join(', '));
   const [notes, setNotes] = useState(note.notes);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const editableCategories = (Object.keys(CATEGORIES) as (CategoryKey | 'all')[]).filter(
+    (k): k is CategoryKey => k !== 'all'
+  );
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,6 +37,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
 
       await onSave(note.id, {
         title,
+        tags: [category],
         fields,
         hashTags: parsedHashTags,
         notes,
@@ -68,6 +77,30 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              Category
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {editableCategories.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setCategory(key)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    category === key
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 ring-1 ring-amber-300 dark:ring-amber-700'
+                      : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                  }`}
+                >
+                  <CategoryIcon category={key} className="w-3.5 h-3.5" />
+                  {CATEGORIES[key].name}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
