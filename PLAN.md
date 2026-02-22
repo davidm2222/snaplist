@@ -4,10 +4,12 @@
 
 A personal capture app for saving things you want to experience, read, buy, or do. Notes are entered as freeform text and auto-parsed into structured records (category, title, fields, hashtags). Backed by Firebase with Google auth.
 
-**Note format:** `category: Title, key:value, key:value #hashtag`
-- `book: The Hobbit, author:Tolkien #fantasy`
-- `restaurant: Nobu, city:NYC #sushi`
-- `movie: Dune #scifi #epic`
+**Note format:** `category: Title, key:value, key:value #hashtag URL`
+- `read: The Hobbit, author:Tolkien #fantasy`
+- `eat: Nobu, city:NYC #sushi`
+- `watch: Dune #scifi #epic`
+- `buy: AirPods Pro, https://amazon.com/... #apple`
+- `read: great article, https://theatlantic.com/... #politics`
 
 ---
 
@@ -16,7 +18,7 @@ A personal capture app for saving things you want to experience, read, buy, or d
 - [x] Phase 1 — Core app end-to-end
 - [x] Phase 2 — UI polish & design system
 - [x] Phase 3 — Intent-based shelf redesign
-- [ ] Phase 4 — URL & article support
+- [x] Phase 4 — URL support
 - [ ] Phase 5 — AI-powered parsing
 - [ ] Phase 6 — Infrastructure (Vercel migration)
 
@@ -67,23 +69,15 @@ Replaced type-based categories (Books, Movies, Shows, Restaurants, Drinks, Activ
 
 ---
 
-## 🔲 Phase 4 — URL & Article Support
+## ✅ Phase 4 — URL Support (Complete)
 
-**Motivation:** Replace Pocket (shut down) for read-later articles. Also useful for tracking shopping items with links.
+URLs are first-class in notes. Include a bare `https://...` anywhere in the input — the parser detects and strips it from the text, stores it in `fields.url`, and the card renders a clickable domain chip.
 
-### 3.1 New categories
-- [ ] Add `article` category (aliases: article, articles, read, link)
-- [ ] Add `buy` / `shopping` category (aliases: buy, shop, shopping, want)
-
-### 3.2 URL storage in notes
-- [ ] Allow URLs in note text — store in `fields.url`
-- [ ] Parser: detect bare URLs in input and auto-store as `fields.url`
-- [ ] NoteCard: render clickable link when `fields.url` is present
-- [ ] NoteCard: show favicon or domain badge for URL notes
-
-### 3.3 UI for URL notes
-- [ ] Compact view: show domain name next to title for URL notes
-- [ ] NoteInput: accept raw URL paste (detect and prompt for category)
+- [x] `extractUrl()` in parser — detects `https?://` in input, stores in `fields.url`, removes from title/notes text
+- [x] NoteCard expanded view — clickable `domain.com ↗` link below the title
+- [x] NoteCard compact view — `↗` icon on the right when URL is present
+- [x] `url` key excluded from fields chip row (not shown as a raw field)
+- [x] Works with any shelf: `buy: AirPods, https://...` or `read: article, https://...`
 
 ---
 
@@ -159,17 +153,13 @@ Replaced type-based categories (Books, Movies, Shows, Restaurants, Drinks, Activ
 
 ## 🎯 Immediate Next Steps
 
-1. **Phase 5 first** — Migrate to Vercel before building AI features
-2. Add `article` and `buy` categories to `src/types/index.ts` and design colors
-3. Build URL detection + storage in the parser
-4. Set up `/api/parse-url` route with Claude integration
-5. Update NoteCard to render clickable URLs and article read-status
+1. **Phase 6 (Vercel migration)** — prerequisite for AI features
+2. **Phase 5 (AI parsing)** — paste a URL → Claude auto-fills title, shelf, hashtags
 
 ---
 
 ## 🔓 Open Questions
 
-- Should `article` and `buy` be top-level tabs, or nested under "Other"?
 - For AI parsing: stream the response for faster perceived UX, or wait for full result?
-- Read-later status (read/unread): stored in Firestore or local state only?
+- Read-later status (read/unread) for articles: stored in Firestore or local state only?
 - Should shopping items support a "purchased" status toggle?
