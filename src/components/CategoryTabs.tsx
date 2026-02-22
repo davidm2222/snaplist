@@ -9,7 +9,7 @@ interface CategoryTabsProps {
   noteCounts?: Record<string, number>;
 }
 
-const TAB_ORDER: (CategoryKey | 'all')[] = ['all', 'book', 'movie', 'show', 'restaurant', 'drink', 'activity', 'other'];
+const TAB_ORDER: (CategoryKey | 'all')[] = ['all', 'read', 'watch', 'eat', 'do', 'buy', 'other'];
 
 export function CategoryTabs({ activeTab, onTabChange, noteCounts = {} }: CategoryTabsProps) {
   return (

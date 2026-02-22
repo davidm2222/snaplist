@@ -13,12 +13,23 @@ import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
 import { CategoryIcon, SearchIcon, ListIcon, CardIcon } from './Icons';
 
-const KNOWN_CATEGORIES = new Set<string>(['book', 'movie', 'show', 'restaurant', 'drink', 'activity', 'other']);
+const KNOWN_CATEGORIES = new Set<string>(['read', 'watch', 'eat', 'do', 'buy', 'other']);
+
+// Maps old category tags to new shelves for backwards compatibility with existing notes
+const LEGACY_CATEGORY_MAP: Record<string, string> = {
+  book: 'read',
+  movie: 'watch',
+  show: 'watch',
+  restaurant: 'eat',
+  drink: 'eat',
+  activity: 'do',
+};
 
 function resolveCategory(note: Note): string {
   const tag = note.tags?.[0];
-  if (tag && KNOWN_CATEGORIES.has(tag)) return tag;
-  return 'other';
+  if (!tag) return 'other';
+  if (KNOWN_CATEGORIES.has(tag)) return tag;
+  return LEGACY_CATEGORY_MAP[tag] || 'other';
 }
 
 export function SnapList() {

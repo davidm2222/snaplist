@@ -11,22 +11,20 @@ interface NoteCardProps {
 }
 
 const CATEGORY_ACCENT: Record<string, string> = {
-  book: 'border-l-amber-500 dark:border-l-amber-400',
-  movie: 'border-l-rose-500 dark:border-l-rose-400',
-  show: 'border-l-sky-500 dark:border-l-sky-400',
-  restaurant: 'border-l-orange-500 dark:border-l-orange-400',
-  drink: 'border-l-teal-500 dark:border-l-teal-400',
-  activity: 'border-l-emerald-500 dark:border-l-emerald-400',
+  read: 'border-l-amber-500 dark:border-l-amber-400',
+  watch: 'border-l-violet-500 dark:border-l-violet-400',
+  eat: 'border-l-orange-500 dark:border-l-orange-400',
+  do: 'border-l-emerald-500 dark:border-l-emerald-400',
+  buy: 'border-l-sky-500 dark:border-l-sky-400',
   other: 'border-l-indigo-400 dark:border-l-indigo-500',
 };
 
 const CATEGORY_BADGE: Record<string, string> = {
-  book: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  movie: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
-  show: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-  restaurant: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  drink: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
-  activity: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  read: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  watch: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+  eat: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  do: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  buy: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
   other: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
 };
 

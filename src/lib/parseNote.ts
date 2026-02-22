@@ -26,15 +26,6 @@ function findCategory(text: string): { category: CategoryKey; remainder: string 
     if (cat.aliases.includes(possibleCategory)) {
       return { category: key as CategoryKey, remainder };
     }
-
-    // Check subtypes
-    if (cat.subtypes) {
-      for (const [subtypeKey, subtype] of Object.entries(cat.subtypes)) {
-        if (subtype.aliases.includes(possibleCategory)) {
-          return { category: key as CategoryKey, remainder };
-        }
-      }
-    }
   }
 
   // If no category match, treat whole text as content
@@ -86,28 +77,12 @@ export function parseNote(raw: string): ParsedNote {
   // Step 5: Extract fields from remaining parts
   const { fields, cleanText: notes } = extractFields(restParts);
 
-  // Determine tags based on category and subtypes
-  const tags: string[] = [category];
-
-  // Check if any subtype matches
-  const categoryData = CATEGORIES[category];
-  if (categoryData.subtypes) {
-    const inputLower = raw.toLowerCase();
-    for (const [subtypeKey, subtype] of Object.entries(categoryData.subtypes)) {
-      if (subtype.aliases.some(alias => inputLower.includes(alias))) {
-        if (!tags.includes(subtypeKey)) {
-          tags.push(subtypeKey);
-        }
-      }
-    }
-  }
-
   return {
     category,
     title,
     fields,
     hashTags,
     notes: notes.replace(/,\s*$/, '').trim(),
-    tags
+    tags: [category]
   };
 }

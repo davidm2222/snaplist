@@ -157,7 +157,7 @@ export function NoteInput({ onSubmit, disabled, notes = [] }: NoteInputProps) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled || isSubmitting}
-          placeholder="book: The Martian, genre:sci-fi, #space, amazing read!"
+          placeholder="eat: Nobu, city:NYC #sushi  —  book: The Martian #scifi  —  watch: Severance"
           className="w-full px-4 py-3 pr-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all text-base"
         />
         <button
