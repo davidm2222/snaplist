@@ -10,6 +10,19 @@ interface NoteCardProps {
   compact?: boolean;
 }
 
+const KNOWN_CATEGORIES = new Set(['read', 'watch', 'eat', 'do', 'buy', 'other']);
+const LEGACY_CATEGORY_MAP: Record<string, string> = {
+  book: 'read', movie: 'watch', show: 'watch',
+  restaurant: 'eat', drink: 'eat', activity: 'do',
+};
+
+function resolveCategory(note: Note): string {
+  const tag = note.tags?.[0];
+  if (!tag) return 'other';
+  if (KNOWN_CATEGORIES.has(tag)) return tag;
+  return LEGACY_CATEGORY_MAP[tag] || 'other';
+}
+
 const CATEGORY_ACCENT: Record<string, string> = {
   read: 'border-l-amber-500 dark:border-l-amber-400',
   watch: 'border-l-violet-500 dark:border-l-violet-400',
@@ -43,7 +56,7 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
-  const category = note.tags[0] || 'other';
+  const category = resolveCategory(note);
   const categoryData = CATEGORIES[category as keyof typeof CATEGORIES] || CATEGORIES.other;
   const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other;
   const badgeClass = CATEGORY_BADGE[category] || CATEGORY_BADGE.other;
