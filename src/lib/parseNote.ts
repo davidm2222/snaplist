@@ -32,6 +32,15 @@ function findCategory(text: string): { category: CategoryKey; remainder: string 
   return { category: 'other', remainder: text.trim() };
 }
 
+// Extract a URL from text
+function extractUrl(text: string): { url: string | null; cleanText: string } {
+  const match = text.match(/https?:\/\/[^\s,]+/);
+  if (!match) return { url: null, cleanText: text };
+  const url = match[0].replace(/[.,;)]+$/, ''); // trim trailing punctuation
+  const cleanText = text.replace(match[0], '').replace(/,\s*,/g, ',').trim();
+  return { url, cleanText };
+}
+
 // Extract hashtags from text
 function extractHashtags(text: string): { hashTags: string[]; cleanText: string } {
   const hashTags: string[] = [];
@@ -64,18 +73,23 @@ export function parseNote(raw: string): ParsedNote {
   // Step 1: Find category
   const { category, remainder } = findCategory(raw);
 
-  // Step 2: Extract hashtags
-  const { hashTags, cleanText: textWithoutTags } = extractHashtags(remainder);
+  // Step 2: Extract URL
+  const { url, cleanText: textWithoutUrl } = extractUrl(remainder);
 
-  // Step 3: Split by comma to get parts
+  // Step 3: Extract hashtags
+  const { hashTags, cleanText: textWithoutTags } = extractHashtags(textWithoutUrl);
+
+  // Step 4: Split by comma to get parts
   const parts = textWithoutTags.split(',').map(p => p.trim()).filter(Boolean);
 
-  // Step 4: First part is usually the title
+  // Step 5: First part is usually the title
   const title = parts[0] || '';
   const restParts = parts.slice(1).join(', ');
 
-  // Step 5: Extract fields from remaining parts
+  // Step 6: Extract fields from remaining parts
   const { fields, cleanText: notes } = extractFields(restParts);
+
+  if (url) fields.url = url;
 
   return {
     category,

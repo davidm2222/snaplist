@@ -1,7 +1,15 @@
 'use client';
 
 import { Note, CATEGORIES } from '@/types';
-import { CategoryIcon, EditIcon, TrashIcon } from './Icons';
+import { CategoryIcon, EditIcon, TrashIcon, ExternalLinkIcon } from './Icons';
+
+function extractDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+}
 
 interface NoteCardProps {
   note: Note;
@@ -80,7 +88,19 @@ export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
               #{note.hashTags[0]}{note.hashTags.length > 1 && ` +${note.hashTags.length - 1}`}
             </span>
           )}
-          <span className="text-[11px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap tabular-nums ml-auto shrink-0">
+          {note.fields.url && (
+            <a
+              href={note.fields.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="ml-auto shrink-0 text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+              title={note.fields.url}
+            >
+              <ExternalLinkIcon className="w-3.5 h-3.5" />
+            </a>
+          )}
+          <span className={`text-[11px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap tabular-nums shrink-0 ${note.fields.url ? '' : 'ml-auto'}`}>
             {formatRelativeTime(note.timestamp)}
           </span>
         </div>
@@ -107,10 +127,23 @@ export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
           </span>
         </div>
 
+        {/* URL */}
+        {note.fields.url && (
+          <a
+            href={note.fields.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors mb-2"
+          >
+            <ExternalLinkIcon className="w-3 h-3" />
+            {extractDomain(note.fields.url)}
+          </a>
+        )}
+
         {/* Fields */}
-        {Object.keys(note.fields).length > 0 && (
+        {Object.keys(note.fields).filter(k => k !== 'url').length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
-            {Object.entries(note.fields).map(([key, value]) => (
+            {Object.entries(note.fields).filter(([key]) => key !== 'url').map(([key, value]) => (
               <span
                 key={key}
                 className="text-xs px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
