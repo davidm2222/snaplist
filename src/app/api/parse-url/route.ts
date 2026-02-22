@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
-// Verifies a Firebase ID token using the Firebase REST API.
-// No service account / firebase-admin needed — just the project's API key.
 async function verifyFirebaseToken(idToken: string): Promise<string | null> {
   const apiKey = process.env.FIREBASE_API_KEY;
   if (!apiKey) return null;
@@ -24,6 +22,43 @@ async function verifyFirebaseToken(idToken: string): Promise<string | null> {
   }
 }
 
+// Extract metadata from raw HTML using regex — no dependencies, instant, free.
+function extractMetadata(html: string, url: string) {
+  const get = (...patterns: RegExp[]) => {
+    for (const p of patterns) {
+      const m = html.match(p)?.[1]?.trim();
+      if (m) return m;
+    }
+    return '';
+  };
+
+  const title = get(
+    /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i,
+    /<title[^>]*>([^<]+)<\/title>/i
+  );
+
+  const description = get(
+    /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i,
+    /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i
+  );
+
+  const author = get(
+    /<meta[^>]+name=["']author["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']author["']/i,
+    /<meta[^>]+property=["']article:author["'][^>]+content=["']([^"']+)["']/i
+  );
+
+  const siteName = get(
+    /<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:site_name["']/i
+  ) || (() => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } })();
+
+  return { title, description, author, siteName };
+}
+
 export interface ParseUrlResponse {
   shelf: string;
   title: string;
@@ -32,19 +67,15 @@ export interface ParseUrlResponse {
 }
 
 export async function POST(req: NextRequest) {
-  // 1. Require a valid Firebase ID token in the Authorization header.
+  // 1. Verify Firebase ID token.
   const authHeader = req.headers.get('authorization');
   const idToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!idToken) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!idToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const uid = await verifyFirebaseToken(idToken);
-  if (!uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // 2. Validate the URL from the request body.
+  // 2. Validate URL.
   let url: string;
   try {
     const body = await req.json();
@@ -57,74 +88,76 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
   }
 
-  // 3. Fetch the page server-side (avoids CORS, hides origin from client).
-  let headHtml = '';
+  // 3. Fetch the page and extract metadata with regex (hybrid step 1 — no AI needed).
+  let meta = { title: '', description: '', author: '', siteName: '' };
   try {
     const pageRes = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SnapList/1.0; +https://snaplist.app)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SnapList/1.0)' },
       signal: AbortSignal.timeout(6000),
     });
-    const text = await pageRes.text();
-    // Extract <head> only — keeps the prompt small and focused on metadata.
-    const match = text.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-    headHtml = (match?.[1] ?? text).slice(0, 4000);
+    const html = await pageRes.text();
+    const head = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i)?.[1] ?? html.slice(0, 5000);
+    meta = extractMetadata(head, url);
   } catch {
-    // Non-fatal — Claude can still attempt a classification from the URL alone.
-    headHtml = '';
+    // Non-fatal — Claude can still classify from the URL alone.
   }
 
-  // 4. Call Claude to classify and extract metadata.
+  // 4. Call Claude only for shelf classification + hashtag suggestions (hybrid step 2).
+  // Much smaller prompt than sending full HTML.
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const prompt = `You are a metadata extractor for a personal bookmarking app called SnapList.
-
-Classify this page into one shelf and extract key metadata.
+  const prompt = `Classify this web page and suggest hashtags for a personal bookmarking app.
 
 Shelves:
-- read   → articles, blog posts, documentation, books, links to read
-- watch  → YouTube videos, movies, TV shows, films, video content
-- eat    → restaurants, cafes, bars, recipes, food places
-- do     → activities, events, places to visit, concerts, hikes, museums
-- buy    → products, shopping items, gear, tools
-- other  → anything that doesn't fit above
+- read   → articles, blog posts, books, documentation, links to read
+- watch  → YouTube, movies, TV shows, video content
+- eat    → restaurants, cafes, bars, recipes, food
+- do     → activities, events, places to visit, concerts, hikes
+- buy    → products, shopping, gear, tools
+- other  → anything else
 
-Return ONLY a valid JSON object — no markdown, no explanation:
-{
-  "shelf": "<shelf key>",
-  "title": "<short clear title, max 60 chars>",
-  "fields": {
-    "author": "<author name, if applicable>",
-    "site": "<site/publication name>"
-  },
-  "hashtags": ["<tag1>", "<tag2>"]
-}
-
-Rules:
-- "fields" should only include keys that have real values (omit empty ones)
-- "hashtags" should be 1-3 lowercase single-word tags describing the content
-- "title" should be the actual title of the content, not the URL
-
+Page info:
+Title: ${meta.title || '(none)'}
+Description: ${meta.description || '(none)'}
 URL: ${url}
-Page <head> HTML:
-${headHtml}`;
 
-  let parsed: ParseUrlResponse;
+Return ONLY valid JSON, no markdown:
+{"shelf":"<shelf>","hashtags":["<tag1>","<tag2>"]}
+
+Rules: 1-3 lowercase single-word hashtags. Pick the most relevant shelf.`;
+
+  let shelf = 'other';
+  let hashtags: string[] = [];
+
   try {
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
+      max_tokens: 100,
       messages: [{ role: 'user', content: prompt }],
     });
 
     const raw = message.content[0].type === 'text' ? message.content[0].text : '';
-    // Extract JSON even if Claude wraps it in backticks.
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON in response');
-    parsed = JSON.parse(jsonMatch[0]);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      shelf = parsed.shelf ?? 'other';
+      hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];
+    }
   } catch (err) {
-    console.error('Claude parse error:', err);
-    return NextResponse.json({ error: 'Failed to parse page' }, { status: 500 });
+    console.error('Claude classification error:', err);
+    // Fall through with defaults — still return the metadata we extracted.
   }
 
-  return NextResponse.json(parsed);
+  const fields: Record<string, string> = {};
+  if (meta.author) fields.author = meta.author;
+  if (meta.siteName) fields.site = meta.siteName;
+
+  const response: ParseUrlResponse = {
+    shelf,
+    title: meta.title || url,
+    fields,
+    hashtags,
+  };
+
+  return NextResponse.json(response);
 }

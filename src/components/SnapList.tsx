@@ -11,7 +11,9 @@ import { SearchBar } from './SearchBar';
 import { NoteCard } from './NoteCard';
 import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
+import { ReviewModal } from './ReviewModal';
 import { CategoryIcon, SearchIcon, ListIcon, CardIcon } from './Icons';
+import { isBareUrl } from '@/lib/parseNote';
 
 const KNOWN_CATEGORIES = new Set<string>(['read', 'watch', 'eat', 'do', 'buy', 'other']);
 
@@ -38,6 +40,7 @@ export function SnapList() {
   const [activeTab, setActiveTab] = useState<CategoryKey | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [reviewingUrl, setReviewingUrl] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
 
   // Calculate note counts per category
@@ -98,6 +101,18 @@ export function SnapList() {
     await updateNote(id, updates);
   };
 
+  const handleNoteSubmit = async (raw: string) => {
+    const trimmed = raw.trim();
+    if (isBareUrl(trimmed)) {
+      const urlMatch = trimmed.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        setReviewingUrl(urlMatch[0]);
+        return;
+      }
+    }
+    await addNote(trimmed);
+  };
+
   // Show auth modal if not logged in
   if (!authLoading && !user) {
     return <AuthModal isOpen={true} />;
@@ -121,7 +136,7 @@ export function SnapList() {
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-5">
         {/* Input with autocomplete */}
-        <NoteInput onSubmit={addNote} disabled={notesLoading} notes={notes} />
+        <NoteInput onSubmit={handleNoteSubmit} disabled={notesLoading} notes={notes} />
 
         {/* Search and Tabs */}
         <div className="space-y-3">
@@ -197,6 +212,15 @@ export function SnapList() {
           note={editingNote}
           onSave={handleSaveEdit}
           onClose={() => setEditingNote(null)}
+        />
+      )}
+
+      {/* URL Review Modal */}
+      {reviewingUrl && (
+        <ReviewModal
+          url={reviewingUrl}
+          onSave={addNote}
+          onClose={() => setReviewingUrl(null)}
         />
       )}
     </div>

@@ -69,6 +69,14 @@ function extractFields(text: string): { fields: Record<string, string>; cleanTex
   return { fields, cleanText };
 }
 
+// Returns true when input is essentially a bare URL (with optional shelf prefix / hashtags)
+// Triggers the AI review flow instead of direct save.
+// Examples that match: "https://example.com", "read: https://...", "https://... #news #tech"
+// Examples that don't: "read: My Article, https://...", "book: The Hobbit"
+export function isBareUrl(input: string): boolean {
+  return /^([a-zA-Z]+:\s*)?https?:\/\/[^\s]+(\s+#[a-zA-Z0-9_]+)*\s*$/.test(input.trim());
+}
+
 export function parseNote(raw: string): ParsedNote {
   // Step 1: Find category
   const { category, remainder } = findCategory(raw);

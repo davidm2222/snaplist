@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useRef, useEffect, useMemo } from 'react';
 import { Note } from '@/types';
+import { isBareUrl } from '@/lib/parseNote';
 
 interface NoteInputProps {
   onSubmit: (raw: string) => Promise<void>;
@@ -163,9 +164,9 @@ export function NoteInput({ onSubmit, disabled, notes = [] }: NoteInputProps) {
         <button
           type="submit"
           disabled={!value.trim() || disabled || isSubmitting}
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-900 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-900 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
         >
-          {isSubmitting ? '...' : 'Add'}
+          {isSubmitting ? '...' : isBareUrl(value) ? 'Review & Save' : 'Add'}
         </button>
       </div>
       {suggestion ? (

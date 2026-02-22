@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -16,6 +16,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  getIdToken: () => Promise<string>;
   error: string | null;
   clearError: () => void;
 }
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const firebaseUserRef = useRef<FirebaseUser | null>(null);
 
   useEffect(() => {
     // If auth is not initialized (no Firebase config), stop loading
@@ -35,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      firebaseUserRef.current = firebaseUser;
       if (firebaseUser) {
         setUser({
           uid: firebaseUser.uid,
@@ -80,10 +83,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const getIdToken = async (): Promise<string> => {
+    if (!firebaseUserRef.current) throw new Error('Not authenticated');
+    return firebaseUserRef.current.getIdToken();
+  };
+
   const clearError = () => setError(null);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, error, clearError }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, getIdToken, error, clearError }}>
       {children}
     </AuthContext.Provider>
   );
