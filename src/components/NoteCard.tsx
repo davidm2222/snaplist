@@ -1,7 +1,7 @@
 'use client';
 
 import { Note, CATEGORIES } from '@/types';
-import { CategoryIcon, EditIcon, TrashIcon, ExternalLinkIcon } from './Icons';
+import { CategoryIcon, EditIcon, TrashIcon, ExternalLinkIcon, CheckCircleIcon } from './Icons';
 
 function extractDomain(url: string): string {
   try {
@@ -15,6 +15,7 @@ interface NoteCardProps {
   note: Note;
   onEdit?: (note: Note) => void;
   onDelete?: (id: string) => void;
+  onToggleDone?: (id: string, done: boolean) => void;
   compact?: boolean;
 }
 
@@ -63,7 +64,7 @@ function formatRelativeTime(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString();
 }
 
-export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
+export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: NoteCardProps) {
   const category = resolveCategory(note);
   const categoryData = CATEGORIES[category as keyof typeof CATEGORIES] || CATEGORIES.other;
   const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other;
@@ -73,11 +74,18 @@ export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
     return (
       <div
         onClick={() => onEdit?.(note)}
-        className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} cursor-pointer transition-all hover:shadow-md`}
+        className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} cursor-pointer transition-all hover:shadow-md ${note.done ? 'opacity-50' : ''}`}
       >
         <div className="flex items-center gap-2 px-3 py-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleDone?.(note.id, !note.done); }}
+            className={`shrink-0 transition-colors ${note.done ? 'text-emerald-500 hover:text-zinc-400 dark:hover:text-zinc-500' : 'text-zinc-300 dark:text-zinc-600 hover:text-emerald-500 dark:hover:text-emerald-400'}`}
+            title={note.done ? 'Mark active' : 'Mark done'}
+          >
+            <CheckCircleIcon className="w-3.5 h-3.5" />
+          </button>
           <CategoryIcon category={category} className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-          <span className="font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 capitalize truncate">
+          <span className={`font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 capitalize truncate ${note.done ? 'line-through' : ''}`}>
             {note.title}
           </span>
           <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${badgeClass}`}>
@@ -109,13 +117,13 @@ export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
   }
 
   return (
-    <div className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} transition-all hover:shadow-md`}>
+    <div className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} transition-all hover:shadow-md ${note.done ? 'opacity-60' : ''}`}>
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             <CategoryIcon category={category} className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-            <h3 className="font-semibold font-serif text-zinc-900 dark:text-zinc-50 capitalize">
+            <h3 className={`font-semibold font-serif text-zinc-900 dark:text-zinc-50 capitalize ${note.done ? 'line-through' : ''}`}>
               {note.title}
             </h3>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
@@ -177,6 +185,13 @@ export function NoteCard({ note, onEdit, onDelete, compact }: NoteCardProps) {
 
         {/* Actions */}
         <div className="flex gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+          <button
+            onClick={() => onToggleDone?.(note.id, !note.done)}
+            className={`flex items-center gap-1 text-xs transition-colors ${note.done ? 'text-emerald-500 hover:text-zinc-400 dark:hover:text-zinc-500' : 'text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
+          >
+            <CheckCircleIcon className="w-3 h-3" />
+            {note.done ? 'Restore' : 'Done'}
+          </button>
           <button
             onClick={() => onEdit?.(note)}
             className="flex items-center gap-1 text-xs text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"

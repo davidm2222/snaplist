@@ -10,6 +10,7 @@ export interface Note {
   raw: string;
   timestamp: number;
   createdAt?: string;
+  done?: boolean;
 }
 
 // Category definitions

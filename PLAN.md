@@ -19,8 +19,9 @@ A personal capture app for saving things you want to experience, read, buy, or d
 - [x] Phase 2 — UI polish & design system
 - [x] Phase 3 — Intent-based shelf redesign
 - [x] Phase 4 — URL support
-- [ ] Phase 5 — AI-powered parsing
-- [ ] Phase 6 — Infrastructure (Vercel migration)
+- [x] Phase 5 — AI-powered URL parsing
+- [x] Phase 6 — Vercel migration
+- [ ] Phase 7 — Archive / Done status
 
 ---
 
@@ -81,46 +82,63 @@ URLs are first-class in notes. Include a bare `https://...` anywhere in the inpu
 
 ---
 
-## 🔲 Phase 5 — AI-Powered Parsing
+## ✅ Phase 5 — AI-Powered URL Parsing (Complete)
 
-**Motivation:** Paste a URL → AI fetches page metadata and auto-fills title, category, tags, and notes. Zero friction capture.
+Paste a bare URL → AI fetches page metadata and auto-fills title, category, tags, and fields via a review flow.
 
-> ⚠️ **Requires Phase 6 (Vercel)** — AI parsing needs a server-side API route to safely call an AI provider and fetch URLs. Not possible on GitHub Pages static export.
-
-### 4.1 Infrastructure
-- [ ] Create `/api/parse-url` route (Next.js API route, server-side)
-- [ ] Choose AI provider — Anthropic Claude recommended (claude-haiku-4-5-20251001 for speed/cost)
-- [ ] Add `ANTHROPIC_API_KEY` to Vercel environment variables
-
-### 4.2 Core AI parsing
-- [ ] Fetch URL server-side (avoid CORS), extract page title + meta description + OG tags
-- [ ] Send page content to Claude: classify category, suggest title, extract key fields, suggest hashtags
-- [ ] Return structured `ParsedNote`-compatible object
-
-### 4.3 UX flow
-- [ ] NoteInput: detect when user pastes a URL
-- [ ] Show "Analyzing URL..." loading state
-- [ ] Pre-fill input with AI-suggested text (user can edit before saving)
-- [ ] Fallback gracefully if fetch or AI call fails (let user type manually)
-
-### 4.4 Article-specific enhancements
-- [ ] Store `fields.url`, `fields.author`, `fields.site` for articles
-- [ ] Add `read` / `unread` status toggle on article cards
-- [ ] Filter: show only unread articles in Articles tab
+- [x] `/api/parse-url` Next.js App Router route — server-side, authenticated via Firebase ID token
+- [x] Firebase token verification via REST API (no firebase-admin needed)
+- [x] Claude (claude-haiku-4-5) fetches URL content, classifies category, extracts title/fields/hashtags
+- [x] `ReviewModal` — shows AI-suggested parsed note, user can edit before saving
+- [x] NoteInput detects bare URL paste → triggers ReviewModal instead of direct save
+- [x] Graceful fallback if fetch or AI call fails
 
 ---
 
-## 🔲 Phase 6 — Infrastructure: Vercel Migration
+## ✅ Phase 6 — Vercel Migration (Complete)
 
-**Motivation:** GitHub Pages limits the app to static export only — no API routes, no SSR, no middleware. Required for Phase 4 (AI parsing). Also unlocks preview deploys and edge CDN.
+- [x] Vercel project connected to GitHub repo
+- [x] `output: 'export'` removed from `next.config.ts` (now empty)
+- [x] Environment variables in Vercel dashboard (`ANTHROPIC_API_KEY`, `FIREBASE_API_KEY` — server-only, no `NEXT_PUBLIC_` prefix)
+- [x] Firebase token verification uses Firebase REST API
+- [x] GitHub Pages deprecated
 
-- [ ] Create Vercel project, connect GitHub repo
-- [ ] Migrate environment variables from `.env.local` to Vercel dashboard
-- [ ] Remove `output: 'export'` from `next.config.ts` if present
-- [ ] Verify Firebase auth domains include new Vercel URLs
-- [ ] Test build and deploy
-- [ ] Update GitHub Pages → redirect to new Vercel URL (or just deprecate)
-- [ ] Set up preview deploys for feature branches
+---
+
+## 🔲 Phase 7 — Archive / Done Status
+
+**Motivation:** As notes accumulate, completed items (articles read, restaurants visited, things bought) clutter the active list. Mark them done to clear the main view without deleting them.
+
+"Done" applies uniformly across all shelves — it means different things contextually (read it, watched it, ate there, did it, bought it) but is a single concept in the data model.
+
+### 7.1 Data model
+
+- [ ] Add `done?: boolean` to `Note` type in `src/types/index.ts`
+  - `undefined` and `false` are both "active" — no Firestore migration needed
+
+### 7.2 Firestore
+
+- [ ] No schema changes needed — `updateNote` in `useNotes.tsx` already handles partial updates
+- [ ] `addNote` does not set `done` (defaults to undefined/false)
+
+### 7.3 NoteCard
+
+- [ ] Add a `✓` check button to card actions (alongside edit/delete)
+  - Active notes: outlined check icon → click marks done
+  - Done notes: filled check icon → click restores to active
+- [ ] Done note visual treatment: muted opacity + title strikethrough
+- [ ] Accept `onToggleDone: (id: string, done: boolean) => void` prop
+
+### 7.4 SnapList
+
+- [ ] Add `handleToggleDone(id, done)` → calls `updateNote(id, { done })`
+- [ ] Split `filteredNotes` into `activeNotes` and `doneNotes`
+- [ ] Render `activeNotes` in main list as before
+- [ ] Below main list: collapsible "Completed (N)" drawer
+  - Collapsed by default; `showCompleted` state (boolean, global — not per shelf)
+  - Clicking the header expands/collapses it
+  - Done notes render inside with same NoteCard (compact or expanded) + ability to uncheck
+- [ ] Category tab counts reflect only active (non-done) notes
 
 ---
 
@@ -134,8 +152,8 @@ URLs are first-class in notes. Include a bare `https://...` anywhere in the inpu
 | Auth | Firebase Auth (Google) |
 | Database | Firebase Firestore |
 | Package manager | pnpm |
-| Hosting | GitHub Pages → Vercel (planned) |
-| AI (planned) | Anthropic Claude (claude-haiku-4-5 for parsing) |
+| Hosting | Vercel |
+| AI | Anthropic Claude (claude-haiku-4-5-20251001) |
 
 **Key files:**
 | File | Purpose |
@@ -147,19 +165,21 @@ URLs are first-class in notes. Include a bare `https://...` anywhere in the inpu
 | `src/components/SnapList.tsx` | Main app shell — state, filtering, layout |
 | `src/components/NoteCard.tsx` | Individual note display (compact + expanded) |
 | `src/components/NoteInput.tsx` | Text input with parse preview |
+| `src/app/api/parse-url/route.ts` | Server-side AI URL parsing endpoint |
+| `src/components/ReviewModal.tsx` | AI-parsed note review flow |
 | `src/app/import/page.tsx` | Supabase JSON → Firebase import tool |
 
 ---
 
 ## 🎯 Immediate Next Steps
 
-1. **Phase 6 (Vercel migration)** — prerequisite for AI features
-2. **Phase 5 (AI parsing)** — paste a URL → Claude auto-fills title, shelf, hashtags
+1. **Phase 7 (Archive / Done)** — mark notes done, collapsible completed drawer
+2. **Phase 8 (NL input)** — sparkle button triggers AI parse of free-form text → ReviewModal flow
 
 ---
 
 ## 🔓 Open Questions
 
-- For AI parsing: stream the response for faster perceived UX, or wait for full result?
-- Read-later status (read/unread) for articles: stored in Firestore or local state only?
-- Should shopping items support a "purchased" status toggle?
+- NL input: explicit sparkle button, auto-detect unstructured input, or both?
+- Should completed items be exportable separately from active ones?
+- Shopping items: support a "purchased" quantity counter vs. simple done toggle?
