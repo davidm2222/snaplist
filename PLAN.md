@@ -21,7 +21,8 @@ A personal capture app for saving things you want to experience, read, buy, or d
 - [x] Phase 4 — URL support
 - [x] Phase 5 — AI-powered URL parsing
 - [x] Phase 6 — Vercel migration
-- [ ] Phase 7 — Archive / Done status
+- [x] Phase 7 — Archive / Done status
+- [x] Phase 8 — Subtype / Type labels on notes
 
 ---
 
@@ -171,10 +172,28 @@ Paste a bare URL → AI fetches page metadata and auto-fills title, category, ta
 
 ---
 
+---
+
+## ✅ Phase 8 — Subtype / Type Labels on Notes (Complete)
+
+When the intent-based shelf redesign (Phase 3) collapsed specific types (Books, Movies) into
+broader shelves (Read, Watch), the original input alias was discarded at parse time. The chip
+on each card showed the shelf name ("Read") rather than the specific type ("Book", "Article").
+
+This phase restores that information without changing the tab structure.
+
+- [x] `type?: string` added to Note interface — the preserved input alias (e.g. "book", "article")
+- [x] `parseNote()` returns `type` when the input alias differs from the resolved shelf key
+- [x] `useNotes.addNote()` saves `type` to Firestore (only when present — no migration needed)
+- [x] `NoteCard` resolves display type: `note.type` → legacy `tags[0]` alias → shelf name fallback
+- [x] EditModal: renamed "Category" to "Shelf"; adds a "Type" chip row per shelf with curated options (Book, Article, Link / Movie, Show, Video / etc.); resets type when shelf changes
+- [x] Legacy notes (pre-Phase 3) work automatically — their `tags[0]` was the alias ("book", "movie")
+
+---
+
 ## 🎯 Immediate Next Steps
 
-1. **Phase 7 (Archive / Done)** — mark notes done, collapsible completed drawer
-2. **Phase 8 (NL input)** — sparkle button triggers AI parse of free-form text → ReviewModal flow
+1. **Phase 9 (NL input)** — sparkle button triggers AI parse of free-form text → ReviewModal flow
 
 ---
 

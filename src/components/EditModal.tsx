@@ -10,10 +10,37 @@ interface EditModalProps {
   onClose: () => void;
 }
 
+const KNOWN_SHELVES = new Set(['read', 'watch', 'eat', 'do', 'buy', 'other']);
+const LEGACY_MAP: Record<string, CategoryKey> = {
+  book: 'read', movie: 'watch', show: 'watch',
+  restaurant: 'eat', drink: 'eat', activity: 'do',
+};
+
+// Curated type options per shelf shown as chip buttons
+const TYPE_OPTIONS: Partial<Record<CategoryKey, string[]>> = {
+  read: ['book', 'article', 'link'],
+  watch: ['movie', 'show', 'video'],
+  eat: ['restaurant', 'cafe', 'bar', 'drink'],
+  do: ['activity', 'event', 'concert', 'hike', 'museum'],
+};
+
+function resolveShelf(note: Note): CategoryKey {
+  const tag = note.tags?.[0];
+  if (!tag) return 'other';
+  if (KNOWN_SHELVES.has(tag)) return tag as CategoryKey;
+  return LEGACY_MAP[tag] || 'other';
+}
+
+function resolveNoteType(note: Note): string {
+  if (note.type) return note.type;
+  const tag = note.tags?.[0];
+  if (tag && !KNOWN_SHELVES.has(tag)) return tag; // legacy alias in tags[0]
+  return '';
+}
+
 export function EditModal({ note, onSave, onClose }: EditModalProps) {
-  const [category, setCategory] = useState<CategoryKey>(
-    (note.tags[0] as CategoryKey) || 'other'
-  );
+  const [category, setCategory] = useState<CategoryKey>(resolveShelf(note));
+  const [type, setType] = useState<string>(resolveNoteType(note));
   const [title, setTitle] = useState(note.title);
   const [fields, setFields] = useState<Record<string, string>>(note.fields);
   const [hashTags, setHashTags] = useState(note.hashTags.join(', '));
@@ -23,6 +50,11 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
   const editableCategories = (Object.keys(CATEGORIES) as (CategoryKey | 'all')[]).filter(
     (k): k is CategoryKey => k !== 'all'
   );
+
+  const handleCategoryChange = (key: CategoryKey) => {
+    setCategory(key);
+    setType(''); // reset type when shelf changes
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -35,13 +67,16 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
         .map(t => t.trim().replace(/^#/, '').toLowerCase())
         .filter(Boolean);
 
-      await onSave(note.id, {
+      const updates: Partial<Note> = {
         title,
         tags: [category],
         fields,
         hashTags: parsedHashTags,
         notes,
-      });
+        type: type || undefined,
+      };
+
+      await onSave(note.id, updates);
       onClose();
     } catch (err) {
       console.error('Failed to save:', err);
@@ -69,6 +104,8 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
     }
   };
 
+  const typeOptions = TYPE_OPTIONS[category] ?? [];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto">
@@ -77,17 +114,17 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Category */}
+          {/* Shelf */}
           <div>
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-              Category
+              Shelf
             </label>
             <div className="flex flex-wrap gap-1.5">
               {editableCategories.map((key) => (
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setCategory(key)}
+                  onClick={() => handleCategoryChange(key)}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     category === key
                       ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 ring-1 ring-amber-300 dark:ring-amber-700'
@@ -100,6 +137,42 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
               ))}
             </div>
           </div>
+
+          {/* Type (only shown for shelves that have subtypes) */}
+          {typeOptions.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Type
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setType('')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    type === ''
+                      ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200 ring-1 ring-zinc-400 dark:ring-zinc-500'
+                      : 'bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                  }`}
+                >
+                  None
+                </button>
+                {typeOptions.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setType(opt)}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
+                      type === opt
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 ring-1 ring-amber-300 dark:ring-amber-700'
+                        : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    }`}
+                  >
+                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Title */}
           <div>

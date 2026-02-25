@@ -64,7 +64,7 @@ export function useNotes() {
 
     const parsed = parseNote(raw);
 
-    const noteData = {
+    const noteData: Record<string, unknown> = {
       userId: user.uid,
       raw,
       title: parsed.title,
@@ -74,6 +74,7 @@ export function useNotes() {
       notes: parsed.notes,
       timestamp: Date.now(),
     };
+    if (parsed.type !== undefined) noteData.type = parsed.type;
 
     try {
       await addDoc(collection(db, 'notes'), noteData);

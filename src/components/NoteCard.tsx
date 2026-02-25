@@ -32,6 +32,15 @@ function resolveCategory(note: Note): string {
   return LEGACY_CATEGORY_MAP[tag] || 'other';
 }
 
+// Returns the specific type label to show in the chip (e.g. "book", "article", "movie")
+// Falls back to null when no subtype is known — caller uses shelf name instead.
+function resolveDisplayType(note: Note): string | null {
+  if (note.type) return note.type;
+  const tag = note.tags?.[0];
+  if (tag && !KNOWN_CATEGORIES.has(tag)) return tag; // legacy note: tags[0] is the alias
+  return null;
+}
+
 const CATEGORY_ACCENT: Record<string, string> = {
   read: 'border-l-amber-500 dark:border-l-amber-400',
   watch: 'border-l-violet-500 dark:border-l-violet-400',
@@ -69,6 +78,10 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
   const categoryData = CATEGORIES[category as keyof typeof CATEGORIES] || CATEGORIES.other;
   const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other;
   const badgeClass = CATEGORY_BADGE[category] || CATEGORY_BADGE.other;
+  const displayType = resolveDisplayType(note);
+  const chipLabel = displayType
+    ? displayType.charAt(0).toUpperCase() + displayType.slice(1)
+    : categoryData.name;
 
   if (compact) {
     return (
@@ -89,7 +102,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
             {note.title}
           </span>
           <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${badgeClass}`}>
-            {categoryData.name}
+            {chipLabel}
           </span>
           {note.hashTags.length > 0 && (
             <span className="text-[11px] text-teal-500 dark:text-teal-400 truncate hidden sm:inline">
@@ -127,7 +140,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
               {note.title}
             </h3>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
-              {categoryData.name}
+              {chipLabel}
             </span>
           </div>
           <span className="text-xs text-zinc-400 dark:text-zinc-500 whitespace-nowrap tabular-nums">

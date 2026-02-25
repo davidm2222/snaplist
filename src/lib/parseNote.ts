@@ -2,6 +2,7 @@ import { CATEGORIES, CategoryKey } from '@/types';
 
 interface ParsedNote {
   category: CategoryKey;
+  type?: string; // Original input alias (e.g. "book", "article") when it differs from the shelf key
   title: string;
   fields: Record<string, string>;
   hashTags: string[];
@@ -10,7 +11,7 @@ interface ParsedNote {
 }
 
 // Find category from input text
-function findCategory(text: string): { category: CategoryKey; remainder: string } {
+function findCategory(text: string): { category: CategoryKey; alias?: string; remainder: string } {
   const colonIndex = text.indexOf(':');
   if (colonIndex === -1) {
     return { category: 'other', remainder: text.trim() };
@@ -24,7 +25,9 @@ function findCategory(text: string): { category: CategoryKey; remainder: string 
     if (key === 'all') continue;
 
     if (cat.aliases.includes(possibleCategory)) {
-      return { category: key as CategoryKey, remainder };
+      // Only preserve alias when it differs from the shelf key (e.g. "book" ≠ "read")
+      const alias = possibleCategory !== key ? possibleCategory : undefined;
+      return { category: key as CategoryKey, alias, remainder };
     }
   }
 
@@ -79,7 +82,7 @@ export function isBareUrl(input: string): boolean {
 
 export function parseNote(raw: string): ParsedNote {
   // Step 1: Find category
-  const { category, remainder } = findCategory(raw);
+  const { category, alias, remainder } = findCategory(raw);
 
   // Step 2: Extract URL
   const { url, cleanText: textWithoutUrl } = extractUrl(remainder);
@@ -101,6 +104,7 @@ export function parseNote(raw: string): ParsedNote {
 
   return {
     category,
+    type: alias,
     title,
     fields,
     hashTags,

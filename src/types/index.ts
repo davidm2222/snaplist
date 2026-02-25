@@ -11,6 +11,7 @@ export interface Note {
   timestamp: number;
   createdAt?: string;
   done?: boolean;
+  type?: string; // Original input alias: "book", "article", "movie", "show", etc.
 }
 
 // Category definitions
