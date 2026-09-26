@@ -53,7 +53,7 @@ Target model — each layer has one job:
 ### F4. Error handling & small UX fixes
 - [ ] Toast component; surface failures from add / review save / delete / `useNotes.error` (all currently console-only)
 - [ ] Delete: replace `window.confirm` with an Undo toast
-- [ ] Compact card uses CSS `capitalize` on titles — "iPhone" renders "IPhone"
+- [x] Compact card uses CSS `capitalize` on titles — "iPhone" renders "IPhone"
 - [ ] Fix pre-existing lint errors: `useNotes.tsx` and `useAuth.tsx` set state synchronously in an effect
 - [ ] Remove `/import` page (one-time Supabase import, done) and unused Geist Mono font
 

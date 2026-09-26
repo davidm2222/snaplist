@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-26 — F4: small fixes
+
+- Titles show exactly as typed. Cards used CSS `capitalize`, which turned "iPhone" into "IPhone".
+
 ## 2026-09-26 — F3: one save path
 
 - **Every screen now saves the same way.** Typing, the review screen, and editing each build a structured `NoteDraft`; `useNotes` turns it into Firestore data in one function. Before, the review screen rebuilt a text string and re-parsed it (why commas broke fields) and the edit screen wrote raw updates (why `undefined` silently failed).

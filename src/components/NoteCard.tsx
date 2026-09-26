@@ -82,7 +82,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
             <CheckCircleIcon className="w-3.5 h-3.5" />
           </button>
           <CategoryIcon category={category} className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-          <span className={`font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 capitalize truncate ${note.done ? 'line-through' : ''}`}>
+          <span className={`font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 truncate ${note.done ? 'line-through' : ''}`}>
             {note.title}
           </span>
           <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${badgeClass}`}>
@@ -120,7 +120,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             <CategoryIcon category={category} className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-            <h3 className={`font-semibold font-serif text-zinc-900 dark:text-zinc-50 capitalize ${note.done ? 'line-through' : ''}`}>
+            <h3 className={`font-semibold font-serif text-zinc-900 dark:text-zinc-50 ${note.done ? 'line-through' : ''}`}>
               {note.title}
             </h3>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
