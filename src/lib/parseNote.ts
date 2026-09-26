@@ -1,4 +1,5 @@
-import { CATEGORIES, CategoryKey } from '@/types';
+import { CategoryKey } from '@/types';
+import { lookupAlias } from './notes';
 
 interface ParsedNote {
   category: CategoryKey;
@@ -20,16 +21,8 @@ function findCategory(text: string): { category: CategoryKey; alias?: string; re
   const possibleCategory = text.slice(0, colonIndex).trim().toLowerCase();
   const remainder = text.slice(colonIndex + 1).trim();
 
-  // Check each category's aliases
-  for (const [key, cat] of Object.entries(CATEGORIES)) {
-    if (key === 'all') continue;
-
-    if (cat.aliases.includes(possibleCategory)) {
-      // Only preserve alias when it differs from the shelf key (e.g. "book" ≠ "read")
-      const alias = possibleCategory !== key ? possibleCategory : undefined;
-      return { category: key as CategoryKey, alias, remainder };
-    }
-  }
+  const match = lookupAlias(possibleCategory);
+  if (match) return { category: match.shelf, alias: match.type, remainder };
 
   // If no category match, treat whole text as content
   return { category: 'other', remainder: text.trim() };

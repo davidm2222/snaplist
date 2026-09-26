@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { CategoryKey, CATEGORIES } from '@/types';
 import { CategoryIcon } from './Icons';
+import { SHELVES, isShelf } from '@/lib/notes';
 import { useAuth } from '@/hooks/useAuth';
 import type { ParseUrlResponse } from '@/app/api/parse-url/route';
 
@@ -15,7 +16,6 @@ interface ReviewModalProps {
 
 type Status = 'loading' | 'ready' | 'error';
 
-const VALID_SHELVES = new Set<string>(['read', 'watch', 'eat', 'do', 'buy', 'other']);
 
 // Fields worth offering per shelf; any other field the parser filled in is shown too
 const SHELF_FIELDS: Record<CategoryKey, string[]> = {
@@ -66,10 +66,6 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
     ...Object.keys(fields).filter(k => fields[k]),
   ])];
 
-  const editableCategories = (Object.keys(CATEGORIES) as (CategoryKey | 'all')[]).filter(
-    (k): k is CategoryKey => k !== 'all'
-  );
-
   useEffect(() => {
     let cancelled = false;
 
@@ -90,7 +86,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
 
         if (cancelled) return;
 
-        setShelf(VALID_SHELVES.has(data.shelf) ? (data.shelf as CategoryKey) : 'other');
+        setShelf(isShelf(data.shelf) ? data.shelf : 'other');
         setTitle(data.title || '');
         setFields(data.fields ?? {});
         setHashTags((data.hashtags ?? []).join(', '));
@@ -181,7 +177,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
                 Shelf
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {editableCategories.map((key) => (
+                {SHELVES.map((key) => (
                   <button
                     key={key}
                     type="button"

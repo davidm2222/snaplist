@@ -14,25 +14,7 @@ import { EditModal } from './EditModal';
 import { ReviewModal } from './ReviewModal';
 import { CategoryIcon, SearchIcon, ListIcon, CardIcon, CheckCircleIcon, ChevronDownIcon } from './Icons';
 import { isBareUrl } from '@/lib/parseNote';
-
-const KNOWN_CATEGORIES = new Set<string>(['read', 'watch', 'eat', 'do', 'buy', 'other']);
-
-// Maps old category tags to new shelves for backwards compatibility with existing notes
-const LEGACY_CATEGORY_MAP: Record<string, string> = {
-  book: 'read',
-  movie: 'watch',
-  show: 'watch',
-  restaurant: 'eat',
-  drink: 'eat',
-  activity: 'do',
-};
-
-function resolveCategory(note: Note): string {
-  const tag = note.tags?.[0];
-  if (!tag) return 'other';
-  if (KNOWN_CATEGORIES.has(tag)) return tag;
-  return LEGACY_CATEGORY_MAP[tag] || 'other';
-}
+import { resolveShelf, matchesSearch } from '@/lib/notes';
 
 // Android share target (see manifest.ts) opens /?title=&text=&url=.
 // Apps often put the link inside `text` rather than `url`.
@@ -68,7 +50,7 @@ export function SnapList() {
     const activeNotes = notes.filter(n => !n.done);
     const counts: Record<string, number> = { all: activeNotes.length };
     for (const note of activeNotes) {
-      const category = resolveCategory(note);
+      const category = resolveShelf(note);
       counts[category] = (counts[category] || 0) + 1;
     }
     return counts;
@@ -80,24 +62,11 @@ export function SnapList() {
 
     // If searching, search ALL notes globally (ignore category tab)
     if (searchQuery.trim()) {
-      const terms = searchQuery.toLowerCase().split(' ').filter(Boolean);
-      filtered = filtered.filter(note => {
-        const searchableText = [
-          note.title,
-          note.notes,
-          note.raw,
-          ...note.tags,
-          ...note.hashTags,
-          ...Object.keys(note.fields),
-          ...Object.values(note.fields),
-        ].join(' ').toLowerCase();
-
-        return terms.every(term => searchableText.includes(term));
-      });
+      filtered = filtered.filter(note => matchesSearch(note, searchQuery));
     } else {
       // No search query - filter by category tab
       if (activeTab !== 'all') {
-        filtered = filtered.filter(note => resolveCategory(note) === activeTab);
+        filtered = filtered.filter(note => resolveShelf(note) === activeTab);
       }
     }
 

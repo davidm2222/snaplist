@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { Note, CATEGORIES, CategoryKey } from '@/types';
 import { CategoryIcon } from './Icons';
+import { SHELVES, SHELF_TYPES, resolveShelf, resolveType } from '@/lib/notes';
 
 interface EditModalProps {
   note: Note;
@@ -10,47 +11,15 @@ interface EditModalProps {
   onClose: () => void;
 }
 
-const KNOWN_SHELVES = new Set(['read', 'watch', 'eat', 'do', 'buy', 'other']);
-const LEGACY_MAP: Record<string, CategoryKey> = {
-  book: 'read', movie: 'watch', show: 'watch',
-  restaurant: 'eat', drink: 'eat', activity: 'do',
-};
-
-// Curated type options per shelf shown as chip buttons
-const TYPE_OPTIONS: Partial<Record<CategoryKey, string[]>> = {
-  read: ['book', 'article', 'link'],
-  watch: ['movie', 'show', 'video'],
-  eat: ['restaurant', 'cafe', 'bar', 'drink'],
-  do: ['activity', 'event', 'concert', 'hike', 'museum'],
-};
-
-function resolveShelf(note: Note): CategoryKey {
-  const tag = note.tags?.[0];
-  if (!tag) return 'other';
-  if (KNOWN_SHELVES.has(tag)) return tag as CategoryKey;
-  return LEGACY_MAP[tag] || 'other';
-}
-
-function resolveNoteType(note: Note): string {
-  if (note.type) return note.type;
-  const tag = note.tags?.[0];
-  if (tag && !KNOWN_SHELVES.has(tag)) return tag; // legacy alias in tags[0]
-  return '';
-}
-
 export function EditModal({ note, onSave, onClose }: EditModalProps) {
   const [category, setCategory] = useState<CategoryKey>(resolveShelf(note));
-  const [type, setType] = useState<string>(resolveNoteType(note));
+  const [type, setType] = useState<string>(resolveType(note) ?? '');
   const [title, setTitle] = useState(note.title);
   const [fields, setFields] = useState<Record<string, string>>(note.fields);
   const [hashTags, setHashTags] = useState(note.hashTags.join(', '));
   const [notes, setNotes] = useState(note.notes);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  const editableCategories = (Object.keys(CATEGORIES) as (CategoryKey | 'all')[]).filter(
-    (k): k is CategoryKey => k !== 'all'
-  );
 
   const handleCategoryChange = (key: CategoryKey) => {
     setCategory(key);
@@ -108,7 +77,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
     }
   };
 
-  const typeOptions = TYPE_OPTIONS[category] ?? [];
+  const typeOptions = SHELF_TYPES[category];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -124,7 +93,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
               Shelf
             </label>
             <div className="flex flex-wrap gap-1.5">
-              {editableCategories.map((key) => (
+              {SHELVES.map((key) => (
                 <button
                   key={key}
                   type="button"

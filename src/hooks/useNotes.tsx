@@ -14,7 +14,7 @@ import {
   deleteField,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Note, CategoryKey } from '@/types';
+import { Note } from '@/types';
 import { useAuth } from './useAuth';
 import { parseNote } from '@/lib/parseNote';
 
@@ -115,33 +115,6 @@ export function useNotes() {
     }
   }, [user]);
 
-  // Filter notes by category
-  const getNotesByCategory = useCallback((category: CategoryKey | 'all') => {
-    if (category === 'all') return notes;
-    return notes.filter(note => note.tags.includes(category));
-  }, [notes]);
-
-  // Search notes
-  const searchNotes = useCallback((query: string) => {
-    if (!query.trim()) return notes;
-
-    const terms = query.toLowerCase().split(' ').filter(Boolean);
-
-    return notes.filter(note => {
-      const searchableText = [
-        note.title,
-        note.notes,
-        note.raw,
-        ...note.tags,
-        ...note.hashTags,
-        ...Object.keys(note.fields),
-        ...Object.values(note.fields),
-      ].join(' ').toLowerCase();
-
-      return terms.every(term => searchableText.includes(term));
-    });
-  }, [notes]);
-
   return {
     notes,
     loading,
@@ -149,7 +122,5 @@ export function useNotes() {
     addNote,
     updateNote,
     deleteNote,
-    getNotesByCategory,
-    searchNotes,
   };
 }

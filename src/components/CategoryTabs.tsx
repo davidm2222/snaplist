@@ -2,6 +2,7 @@
 
 import { CATEGORIES, CategoryKey } from '@/types';
 import { CategoryIcon } from './Icons';
+import { SHELVES } from '@/lib/notes';
 
 interface CategoryTabsProps {
   activeTab: CategoryKey | 'all';
@@ -9,7 +10,7 @@ interface CategoryTabsProps {
   noteCounts?: Record<string, number>;
 }
 
-const TAB_ORDER: (CategoryKey | 'all')[] = ['all', 'read', 'watch', 'eat', 'do', 'buy', 'other'];
+const TAB_ORDER: (CategoryKey | 'all')[] = ['all', ...SHELVES];
 
 export function CategoryTabs({ activeTab, onTabChange, noteCounts = {} }: CategoryTabsProps) {
   return (
