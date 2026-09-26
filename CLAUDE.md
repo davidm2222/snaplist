@@ -24,14 +24,15 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 
 | File | Role |
 |------|------|
-| `src/lib/parseNote.ts` | Text → note parser (shelf, title, fields, hashtags, URL, type) |
-| `src/lib/notes.ts` | Shared shelf/type/search logic (`SHELVES`, `SHELF_TYPES`, `lookupAlias`, `resolveShelf`, `resolveType`, `matchesSearch`) — use these, don't re-implement in components |
+| `src/lib/parseNote.ts` | Text → note parser (shelf, title, fields, hashtags, `@place`, URL, type). Title ends at the first `,` `#` `@` or URL |
+| `src/lib/notes.ts` | Shared shelf/type/search logic (`SHELVES`, `SHELF_TYPES`, `lookupAlias`, `resolveShelf`, `resolveType`, `matchesSearch`, location helpers) — use these, don't re-implement in components |
 | `src/types/index.ts` | `Note` type and `CATEGORIES` — shelves, types, and synonyms; add new prefixes here |
 | `src/hooks/useNotes.tsx` | Firestore CRUD + realtime subscription, scoped by `userId` |
 | `src/hooks/useAuth.tsx` | Google sign-in context |
 | `src/lib/firebase.ts` | Firebase init (client only; no-ops if env vars missing) |
-| `src/components/SnapList.tsx` | App shell: state, filtering, active/done split, layout |
-| `src/components/NoteInput.tsx` | Input with autocomplete from existing notes; bare URL → review flow |
+| `src/components/SnapList.tsx` | App shell: state, filtering (tab, search, type, place, sort), active/done split, layout |
+| `src/components/FilterBar.tsx` | Type / place / sort dropdowns (native `<select>`) |
+| `src/components/NoteInput.tsx` | Input with autocomplete (fields, `#tags`, `@places`); bare URL → review flow |
 | `src/components/ReviewModal.tsx` | AI-assisted URL capture review |
 | `src/components/NoteCard.tsx` | Note display (compact + expanded) |
 | `src/components/EditModal.tsx` | Edit shelf / type / text |
@@ -46,7 +47,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 - **`shelf`** is an explicit field on every note (F3 migration, 2026-09-26). `tags` is legacy — still written as `[shelf]` so a code rollback works; `resolveShelf()` falls back to it. Scheduled for removal (see PLAN).
 - **`type`** is the canonical type within the shelf (`book`, `cafe`); synonyms normalize (`film` → `movie`). Optional.
 - **`raw`** is the original input at creation (typed text, or the shared URL). Never updated, not searched.
-- **`fields`** is a free-form `Record<string,string>`. `fields.url` is special (rendered as a link, hidden from the chip row). `fields.location` is `Town ST` text, auto-filled by URL parsing. Everything else is a free-form user label.
+- **`fields`** is a free-form `Record<string,string>`. `fields.url` is special (rendered as a link, hidden from the chip row). `fields.location` is a free-text place name, state only when not the home state (`newton`, `cabot VT`); set by `@place`, `location:`, or URL parsing. `normalizeDraft` drops a trailing `MA`; match/display via `locationKey()` / `formatLocation()` in `notes.ts`, never compare raw strings. Everything else is a free-form user label.
 - **Commas:** typed input is split on commas by `parseNote`, so a typed field value can't contain one. Drafts from the review/edit screens are saved directly, so commas there are fine.
 - **`done`**: `undefined`/`false` = active. Optional fields are only written when present, so schema additions need no migration.
 

@@ -4,7 +4,7 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
-## 2026-09-26 — Location, part 1: parsing
+## 2026-09-26 — Location as a first-class field
 
 - **`@place` shorthand:** `eat: sichuan gourmet @needham`. Matches places you've already used (so `@chestnut hill` works), otherwise one word.
 - **`#tag` and `@place` end the title**, like a comma. Before, `sichuan gourmet #spicy food was great` put "food was great" into the title.
