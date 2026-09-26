@@ -35,7 +35,7 @@ Full alias list: `CATEGORIES` in `src/types/index.ts`.
 
 ## Features
 
-- One-box capture with live parse preview
+- One-box capture with autocomplete from your existing notes
 - AI-assisted URL capture (Claude Haiku via a server route)
 - Shelf tabs with counts, global search, compact/expanded views
 - Mark done → collapsible "Completed" section
