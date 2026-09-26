@@ -99,6 +99,7 @@ describe('CATEGORIES', () => {
 
   it('exposes canonical types per shelf', () => {
     expect(SHELF_TYPES.watch).toEqual(['movie', 'show', 'video']);
-    expect(SHELF_TYPES.buy).toEqual([]);
+    expect(SHELF_TYPES.buy).toEqual(['gift']);
+    expect(SHELF_TYPES.other).toEqual([]);
   });
 });

@@ -25,6 +25,11 @@ describe('planShelfMigration', () => {
       .toEqual({ shelf: 'read', updatedAt: 1000 });
   });
 
+  it('files legacy gift notes under buy', () => {
+    expect(planShelfMigration({ ...base, tags: ['gift'] }))
+      .toEqual({ shelf: 'buy', type: 'gift', updatedAt: 1000 });
+  });
+
   it('files unknown tags under other', () => {
     expect(planShelfMigration({ ...base, tags: [] })).toEqual({ shelf: 'other', updatedAt: 1000 });
   });

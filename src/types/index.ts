@@ -53,7 +53,7 @@ export const CATEGORIES: Record<CategoryKey | 'all', Category> = {
       museum: ['gallery'],
     },
   },
-  buy: { name: 'Buy', aliases: ['buy', 'shop', 'shopping', 'want'], types: {} },
+  buy: { name: 'Buy', aliases: ['buy', 'shop', 'shopping', 'want'], types: { gift: ['gifts'] } },
   other: { name: 'Other', aliases: [], types: {} },
 };
 
