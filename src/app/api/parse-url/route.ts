@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { extractFromUrl, isGenericTitle, type Extracted } from '@/lib/urlExtractors';
-import { stripHomeState } from '@/lib/notes';
+import { extractFromUrl, isGenericTitle, pickType, type Extracted } from '@/lib/urlExtractors';
+import type { CategoryKey } from '@/types';
+import { SHELVES, SHELF_TYPES, isShelf, stripHomeState } from '@/lib/notes';
 
 async function verifyFirebaseToken(idToken: string): Promise<string | null> {
   const apiKey = process.env.FIREBASE_API_KEY;
@@ -61,11 +62,17 @@ function extractMetadata(html: string, url: string) {
     /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:site_name["']/i
   ) || (() => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } })();
 
-  return { title, description, author, siteName };
+  const ogType = get(
+    /<meta[^>]+property=["']og:type["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:type["']/i
+  );
+
+  return { title, description, author, siteName, ogType };
 }
 
 export interface ParseUrlResponse {
   shelf: string;
+  type: string;
   title: string;
   fields: Record<string, string>;
   hashtags: string[];
@@ -101,7 +108,7 @@ export async function POST(req: NextRequest) {
 
   // 3. Fetch the page (following redirects, e.g. maps.app.goo.gl → google.com/maps/place/...)
   // and extract metadata with regex — no AI needed.
-  let meta = { title: '', description: '', author: '', siteName: '' };
+  let meta = { title: '', description: '', author: '', siteName: '', ogType: '' };
   let finalUrl = url;
   try {
     const pageRes = await fetch(url, {
@@ -127,6 +134,11 @@ export async function POST(req: NextRequest) {
   const pageTitle = isGenericTitle(meta.title, meta.siteName) ? '' : meta.title;
   const knownTitle = extracted?.title || pageTitle;
 
+  const typeLines = SHELVES
+    .filter(s => SHELF_TYPES[s].length)
+    .map(s => `- ${s}: ${SHELF_TYPES[s].join(', ')}`)
+    .join('\n');
+
   // 5. Claude classifies the shelf + hashtags, and names the thing when we couldn't.
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -140,6 +152,9 @@ Shelves:
 - buy    → products, shopping, gear, tools
 - other  → anything else
 
+Types (optional, must be one listed for the chosen shelf):
+${typeLines}
+
 Link info:
 Name: ${knownTitle || '(unknown)'}
 Address: ${extracted?.address || '(none)'}
@@ -148,14 +163,16 @@ Shared text: ${sharedText || '(none)'}
 URL: ${finalUrl}
 
 Return ONLY valid JSON, no markdown:
-{"shelf":"<shelf>","hashtags":["<tag1>","<tag2>"],"title":"<name>","location":"<town>"}
+{"shelf":"<shelf>","type":"<type or empty>","hashtags":["<tag1>","<tag2>"],"title":"<name>","location":"<town>"}
 
 Rules:
+- type: "" unless one of the shelf's types clearly fits (a news or magazine piece is an article; a book is a book).
 - 1-3 lowercase single-word hashtags describing the thing (e.g. cuisine, genre, topic).
 - title: short name of the specific thing (not the website's name). Keep the given Name if known.
 - location: the town, adding the state only if it is not Massachusetts (e.g. "Newton", "Cabot VT"); "" if the info above doesn't say where it is.`;
 
-  let shelf = 'other';
+  let shelf: CategoryKey = 'other';
+  let aiType = '';
   let hashtags: string[] = [];
   let aiTitle = '';
   let aiLocation = '';
@@ -171,7 +188,8 @@ Rules:
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      shelf = parsed.shelf ?? 'other';
+      shelf = isShelf(parsed.shelf) ? parsed.shelf : 'other';
+      aiType = typeof parsed.type === 'string' ? parsed.type : '';
       hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];
       aiTitle = typeof parsed.title === 'string' ? parsed.title.trim() : '';
       aiLocation = typeof parsed.location === 'string' ? parsed.location.trim() : '';
@@ -189,6 +207,7 @@ Rules:
 
   const response: ParseUrlResponse = {
     shelf,
+    type: pickType(shelf, aiType, meta.ogType),
     title: knownTitle || aiTitle || url,
     fields,
     hashtags,

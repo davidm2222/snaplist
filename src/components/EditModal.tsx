@@ -3,7 +3,8 @@
 import { useState, FormEvent } from 'react';
 import { Note, NoteDraft, CATEGORIES, CategoryKey } from '@/types';
 import { CategoryIcon } from './Icons';
-import { SHELVES, SHELF_TYPES, resolveShelf, resolveType } from '@/lib/notes';
+import { TypePicker } from './TypePicker';
+import { SHELVES, resolveShelf, resolveType } from '@/lib/notes';
 
 interface EditModalProps {
   note: Note;
@@ -71,7 +72,6 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
     }
   };
 
-  const typeOptions = SHELF_TYPES[category];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -105,41 +105,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
             </div>
           </div>
 
-          {/* Type (only shown for shelves that have subtypes) */}
-          {typeOptions.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Type
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setType('')}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    type === ''
-                      ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200 ring-1 ring-zinc-400 dark:ring-zinc-500'
-                      : 'bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                  }`}
-                >
-                  None
-                </button>
-                {typeOptions.map((opt) => (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => setType(opt)}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
-                      type === opt
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 ring-1 ring-amber-300 dark:ring-amber-700'
-                        : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                    }`}
-                  >
-                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <TypePicker shelf={category} value={type} onChange={setType} />
 
           {/* Title */}
           <div>

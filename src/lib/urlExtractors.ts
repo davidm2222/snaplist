@@ -1,6 +1,9 @@
 // Site-specific extraction for URLs whose pages give a server-side fetch nothing useful
 // (JS-rendered or bot-blocking sites). Pure functions except fetchYouTubeOEmbed.
 
+import type { CategoryKey } from '@/types';
+import { SHELF_TYPES, lookupAlias } from './notes';
+
 export interface Extracted {
   title?: string;
   address?: string; // context for the classifier; not saved as a field
@@ -21,6 +24,15 @@ export function isGenericTitle(title: string, siteName = ''): boolean {
   if (!t) return true;
   if (siteName && t === siteName.trim().toLowerCase()) return true;
   return GENERIC_TITLES.has(t) || BLOCK_PAGE.test(t) || /^amazon\.com\s*:?\s*$/.test(t);
+}
+
+// Type for a shared link: the page's own og:type="article" wins on the read shelf (news sites set it
+// reliably); otherwise Haiku's guess, if it names a type that exists on that shelf.
+export function pickType(shelf: CategoryKey, aiType: string, ogType = ''): string {
+  const types = SHELF_TYPES[shelf] ?? [];
+  if (shelf === 'read' && ogType.trim().toLowerCase() === 'article') return 'article';
+  const guess = lookupAlias(aiType)?.type;
+  return guess && types.includes(guess) ? guess : '';
 }
 
 // Google Maps place URLs carry "Name, street, town, ST zip" in the path:

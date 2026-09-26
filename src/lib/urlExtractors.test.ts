@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractGoogleMaps, extractAmazon, isGenericTitle } from './urlExtractors';
+import { extractGoogleMaps, extractAmazon, isGenericTitle, pickType } from './urlExtractors';
 
 const u = (s: string) => new URL(s);
 
@@ -57,5 +57,25 @@ describe('isGenericTitle', () => {
 
   it('keeps real titles', () => {
     expect(isGenericTitle('Coco Ramen')).toBe(false);
+  });
+});
+
+describe('pickType', () => {
+  it('og:type article wins on the read shelf', () => {
+    expect(pickType('read', 'book', 'article')).toBe('article');
+  });
+
+  it('ignores og:type article on other shelves', () => {
+    expect(pickType('eat', 'restaurant', 'article')).toBe('restaurant');
+  });
+
+  it('accepts synonyms and normalizes them', () => {
+    expect(pickType('watch', 'film')).toBe('movie');
+  });
+
+  it('drops guesses that do not belong to the shelf', () => {
+    expect(pickType('read', 'movie')).toBe('');
+    expect(pickType('buy', 'widget')).toBe('');
+    expect(pickType('read', '')).toBe('');
   });
 });

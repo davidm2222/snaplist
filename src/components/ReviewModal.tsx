@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { CategoryKey, CATEGORIES, NoteDraft } from '@/types';
 import { CategoryIcon } from './Icons';
 import { useToast } from './Toast';
+import { TypePicker } from './TypePicker';
 import { SHELVES, isShelf } from '@/lib/notes';
 import { useAuth } from '@/hooks/useAuth';
 import type { ParseUrlResponse } from '@/app/api/parse-url/route';
@@ -38,6 +39,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
   const toast = useToast();
   const [status, setStatus] = useState<Status>('loading');
   const [shelf, setShelf] = useState<CategoryKey>('other');
+  const [type, setType] = useState('');
   const [title, setTitle] = useState('');
   const [fields, setFields] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState('');
@@ -70,6 +72,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
         if (cancelled) return;
 
         setShelf(isShelf(data.shelf) ? data.shelf : 'other');
+        setType(data.type ?? '');
         setTitle(data.title || '');
         setFields(data.fields ?? {});
         setHashTags((data.hashtags ?? []).join(', '));
@@ -95,6 +98,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
     try {
       await onSave({
         shelf,
+        type,
         title,
         notes,
         fields: { ...fields, url },
@@ -165,7 +169,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setShelf(key)}
+                    onClick={() => { setShelf(key); setType(''); }}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                       shelf === key
                         ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 ring-1 ring-amber-300 dark:ring-amber-700'
@@ -178,6 +182,8 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
                 ))}
               </div>
             </div>
+
+            <TypePicker shelf={shelf} value={type} onChange={setType} />
 
             {/* Title */}
             <div>

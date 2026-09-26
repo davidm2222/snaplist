@@ -4,6 +4,12 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-26 — Shared links get a type
+
+- **Review screen has a Type picker** (Book / Article / Link on Read, Movie / Show / Video on Watch, …), pre-filled. Before, only typed prefixes (`book:`) set a type, so every shared link had none.
+- **Guessing:** a page that declares itself an article (`og:type`, set by NYT, The Atlantic, most news sites) is an article; otherwise Haiku picks from the shelf's types in the same call that picks the shelf, or leaves it blank.
+- Edit and Review screens share one `TypePicker` component.
+
 ## 2026-09-26 — Shared links: paywalled sites
 
 - **Bot-blocked pages no longer become the title.** The Atlantic returned "Your access has been blocked"; the server now fetches with a browser user agent and treats block/interstitial titles as missing, so Haiku names the item from the URL instead.
