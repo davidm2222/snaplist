@@ -1,8 +1,8 @@
 'use client';
 
 import { Note, CATEGORIES } from '@/types';
-import { resolveShelf, resolveType } from '@/lib/notes';
-import { CategoryIcon, EditIcon, TrashIcon, ExternalLinkIcon, CheckCircleIcon } from './Icons';
+import { resolveShelf, resolveType, formatLocation } from '@/lib/notes';
+import { CategoryIcon, EditIcon, TrashIcon, ExternalLinkIcon, CheckCircleIcon, MapPinIcon } from './Icons';
 
 function extractDomain(url: string): string {
   try {
@@ -66,6 +66,8 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
   const chipLabel = displayType
     ? displayType.charAt(0).toUpperCase() + displayType.slice(1)
     : categoryData.name;
+  // url and location have their own display; the rest render as generic chips
+  const otherFields = Object.entries(note.fields).filter(([key]) => key !== 'url' && key !== 'location');
 
   if (compact) {
     return (
@@ -88,6 +90,12 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
           <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${badgeClass}`}>
             {chipLabel}
           </span>
+          {note.fields.location && (
+            <span className="inline-flex items-center gap-0.5 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
+              <MapPinIcon className="w-3 h-3" />
+              {formatLocation(note.fields.location)}
+            </span>
+          )}
           {note.hashTags.length > 0 && (
             <span className="text-[11px] text-teal-500 dark:text-teal-400 truncate hidden sm:inline">
               #{note.hashTags[0]}{note.hashTags.length > 1 && ` +${note.hashTags.length - 1}`}
@@ -132,23 +140,33 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
           </span>
         </div>
 
-        {/* URL */}
-        {note.fields.url && (
-          <a
-            href={note.fields.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors mb-2"
-          >
-            <ExternalLinkIcon className="w-3 h-3" />
-            {extractDomain(note.fields.url)}
-          </a>
+        {/* Location + URL */}
+        {(note.fields.location || note.fields.url) && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 mb-2">
+            {note.fields.location && (
+              <span className="inline-flex items-center gap-1 text-zinc-500 dark:text-zinc-400">
+                <MapPinIcon className="w-3 h-3" />
+                {formatLocation(note.fields.location)}
+              </span>
+            )}
+            {note.fields.url && (
+              <a
+                href={note.fields.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              >
+                <ExternalLinkIcon className="w-3 h-3" />
+                {extractDomain(note.fields.url)}
+              </a>
+            )}
+          </div>
         )}
 
-        {/* Fields */}
-        {Object.keys(note.fields).filter(k => k !== 'url').length > 0 && (
+        {/* Other fields */}
+        {otherFields.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
-            {Object.entries(note.fields).filter(([key]) => key !== 'url').map(([key, value]) => (
+            {otherFields.map(([key, value]) => (
               <span
                 key={key}
                 className="text-xs px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"

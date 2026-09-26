@@ -3,6 +3,7 @@
 import { useState, FormEvent, useRef, useEffect, useMemo } from 'react';
 import { Note } from '@/types';
 import { isBareUrl } from '@/lib/parseNote';
+import { knownLocations } from '@/lib/notes';
 import { useToast } from './Toast';
 
 interface NoteInputProps {
@@ -46,7 +47,8 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
 
     return {
       values,
-      fieldNames: Array.from(fieldNames).sort()
+      fieldNames: Array.from(fieldNames).sort(),
+      places: knownLocations(notes), // most-used first
     };
   }, [notes]);
 
@@ -86,6 +88,19 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
         );
         if (match) {
           setSuggestion(value + match.slice(partial.length) + ':');
+          return;
+        }
+      }
+    }
+
+    // Check for place pattern (@partial) — may be multi-word ("@chestnut h")
+    const placeMatch = textBeforeCursor.match(/(?:^|\s)@([^,#@]*)$/);
+    if (placeMatch) {
+      const partial = placeMatch[1].toLowerCase();
+      if (partial) {
+        const match = autocompleteData.places.find(p => p.startsWith(partial) && p !== partial);
+        if (match) {
+          setSuggestion(value + match.slice(partial.length));
           return;
         }
       }
@@ -162,7 +177,7 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled || isSubmitting}
-          placeholder="eat: Nobu, city:NYC #sushi  —  book: The Martian #scifi  —  watch: Severance"
+          placeholder="eat: Nobu @nyc #sushi  —  book: The Martian #scifi  —  watch: Severance"
           className="w-full px-4 py-3 pr-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all text-base"
         />
         <button
@@ -184,7 +199,7 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
         </button>
       ) : (
         <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
-          Format: <span className="font-mono text-zinc-500 dark:text-zinc-400">category: Title, key:value, #tag, notes</span>
+          Format: <span className="font-mono text-zinc-500 dark:text-zinc-400">category: Title #tag @place, notes, key:value</span>
         </p>
       )}
     </form>

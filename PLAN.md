@@ -76,8 +76,8 @@ Target model — each layer has one job:
 Build:
 - [x] Parser: `#`/`@` end the title; `@place` with known-place matching (tests first)
 - [x] Location helpers: standardize key, display name (tests)
-- [ ] Location display on cards (like `url`) instead of a generic chip
-- [ ] `@` autocomplete from known places
+- [x] Location display on cards (like `url`) instead of a generic chip
+- [x] `@` autocomplete from known places
 - [x] Auto-fill drops home state
 - [ ] Filter by location in the UI (alongside type filter within a shelf, and sort options: newest / A–Z)
 - [ ] Optional: backfill / clean existing locations (`Newton MA` → `newton`)
