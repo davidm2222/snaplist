@@ -8,27 +8,22 @@ Future work only. Shipped work moves to [CHANGELOG.md](./CHANGELOG.md).
 
 ## Now
 
-### 1. Android share target
-Make SnapList appear in Android's share sheet, so Maps / Chrome / YouTube / Instagram → Share → SnapList.
+### 1. Android share target — verify on device
+Code shipped (see CHANGELOG). Remaining:
 
-- [ ] Add `share_target` to `src/app/manifest.ts` (GET with `title`, `text`, `url` params → `/share`)
-- [ ] `/share` page: take shared params, pick out the URL (often buried in `text`), open the review flow pre-filled with any shared title/text
-- [ ] Handle signed-out state (sign in, then continue the share)
-- [ ] Re-install the PWA on the phone to pick up the manifest change; test from Maps, Chrome, YouTube
-
-*Why:* Most captures start as a link in another app. Share-in removes the open-app → paste step, and the shared text often contains what the server fetch can't see (e.g. Maps shares name + address).
+- [ ] Re-install the PWA on the phone to pick up the manifest change; test from Maps, Chrome, YouTube, and a plain-text share
 
 ### 2. Smarter URL parsing
 Today `/api/parse-url` reads `<title>`/OG tags from a server-side fetch. JS-rendered or bot-blocking sites return junk — Google Maps returns just "Google Maps", so the note is useless.
 
-- [ ] Accept optional shared `title`/`text` in the request and pass it to the classifier
+- [ ] Accept optional shared `title`/`text` in the request and pass it to the classifier (SnapList already captures it from the share)
 - [ ] Read the final URL after redirects (`res.url`), not just the original
 - [ ] Site extractors for the worst offenders:
-  - Google Maps: place name + lat/lng from `/maps/place/<Name>/@lat,lng`; shelf `eat`/`do`
+  - Google Maps: short links redirect to `/maps/place/<Name>,+<street>,+<town>,+<ST>+<zip>/data=...` — name and full address are in the path (coords not always present); shelf `eat`/`do`. Test link: `https://maps.app.goo.gl/pCwde1bhyiEmYtEn7` (Coco Ramen, Newton Centre)
   - YouTube: oEmbed endpoint for title/channel
   - Amazon: product name from URL slug
 - [ ] Detect generic metadata (title equals site name, etc.) and let Claude infer from URL + shared text instead
-- [ ] Test with real links collected from actual sharing (need a failing Maps short link to start)
+- [ ] Test with real links collected from actual sharing
 
 *Why:* Garbage titles undermine trust in the AI capture path.
 

@@ -8,10 +8,11 @@ interface NoteInputProps {
   onSubmit: (raw: string) => Promise<void>;
   disabled?: boolean;
   notes?: Note[];
+  initialValue?: string;
 }
 
-export function NoteInput({ onSubmit, disabled, notes = [] }: NoteInputProps) {
-  const [value, setValue] = useState('');
+export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }: NoteInputProps) {
+  const [value, setValue] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestion, setSuggestion] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);

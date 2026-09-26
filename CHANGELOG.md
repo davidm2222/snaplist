@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-25 — Android share target
+
+- **SnapList in the Android share sheet.** The app was "another place to go"; now any app's Share → SnapList opens it with the link. The manifest registers a GET `share_target` on `/`; `SnapList` reads `title`/`text`/`url` once at mount (apps often put the link inside `text`), opens the URL review flow, or pre-fills the input for plain-text shares. Params survive the sign-in screen and are cleared from the address bar afterward.
+
 ## 2026-09-25 — Repo cleanup & docs restructure
 
 After a few months of light use, reorganized the project docs to make the next round of work easier to pick up.

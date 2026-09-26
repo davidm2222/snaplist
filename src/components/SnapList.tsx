@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotes } from '@/hooks/useNotes';
 import { CategoryKey, CATEGORIES, Note } from '@/types';
@@ -34,15 +34,34 @@ function resolveCategory(note: Note): string {
   return LEGACY_CATEGORY_MAP[tag] || 'other';
 }
 
+// Android share target (see manifest.ts) opens /?title=&text=&url=.
+// Apps often put the link inside `text` rather than `url`.
+function readShareParams(): { url: string | null; text: string } | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const title = params.get('title')?.trim() ?? '';
+  const text = params.get('text')?.trim() ?? '';
+  const url = params.get('url')?.trim() || text.match(/https?:\/\/[^\s]+/)?.[0] || null;
+  if (!title && !text && !url) return null;
+  return { url, text: [title, text].filter(Boolean).join(' ') };
+}
+
 export function SnapList() {
   const { user, loading: authLoading } = useAuth();
   const { notes, loading: notesLoading, addNote, updateNote, deleteNote } = useNotes();
   const [activeTab, setActiveTab] = useState<CategoryKey | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const [reviewingUrl, setReviewingUrl] = useState<string | null>(null);
+  // Read once at mount; the modal/input only render after sign-in, and this state survives the auth screen
+  const [share] = useState(readShareParams);
+  const [reviewingUrl, setReviewingUrl] = useState<string | null>(share?.url ?? null);
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
   const [showCompleted, setShowCompleted] = useState(false);
+
+  // Drop share params from the address bar so a refresh doesn't re-trigger them
+  useEffect(() => {
+    if (share) window.history.replaceState(null, '', window.location.pathname);
+  }, [share]);
 
   // Calculate note counts per category — active (non-done) notes only
   const noteCounts = useMemo(() => {
@@ -145,7 +164,7 @@ export function SnapList() {
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-5">
         {/* Input with autocomplete */}
-        <NoteInput onSubmit={handleNoteSubmit} disabled={notesLoading} notes={notes} />
+        <NoteInput onSubmit={handleNoteSubmit} disabled={notesLoading} notes={notes} initialValue={share && !share.url ? share.text : ''} />
 
         {/* Search and Tabs */}
         <div className="space-y-3">

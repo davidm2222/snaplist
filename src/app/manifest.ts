@@ -9,6 +9,12 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#09090b',
     theme_color: '#f59e0b',
+    // Android: show SnapList in the system share sheet. SnapList.tsx reads these params.
+    share_target: {
+      action: '/',
+      method: 'GET',
+      params: { title: 'title', text: 'text', url: 'url' },
+    },
     icons: [
       {
         src: '/icon-192.png',
