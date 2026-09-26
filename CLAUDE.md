@@ -38,7 +38,6 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 | `src/app/api/parse-url/route.ts` | Follow redirects, fetch metadata (regex on `<head>`), run site extractors, Claude Haiku classification |
 | `src/lib/urlExtractors.ts` | Site-specific title/location extraction (Maps, Amazon, YouTube) + generic-title detection |
 | `src/app/manifest.ts` | PWA manifest |
-| `src/app/import/page.tsx` | One-time Supabase JSON → Firestore import |
 
 ## Data model
 

@@ -55,7 +55,7 @@ Target model — each layer has one job:
 - [ ] Delete: replace `window.confirm` with an Undo toast
 - [x] Compact card uses CSS `capitalize` on titles — "iPhone" renders "IPhone"
 - [x] Fix pre-existing lint errors: `useNotes.tsx` and `useAuth.tsx` set state synchronously in an effect
-- [ ] Remove `/import` page (one-time Supabase import, done) and unused Geist Mono font
+- [x] Remove `/import` page (one-time Supabase import, done) and unused Geist Mono font
 
 *Scalability note:* loading all notes via a realtime listener is fine into the thousands; Firestore cost is negligible. Real risk only appears if the app opens to other users — which F1 covers.
 

@@ -41,7 +41,6 @@ Typing a synonym stores the main type: `film: Dune` → Watch · Movie. Full lis
 - Mark done → collapsible "Completed" section
 - Edit modal (shelf, type, text)
 - Installable PWA, dark mode
-- `/import` — one-time import from the old Supabase JSON export
 
 ## Stack
 
