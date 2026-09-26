@@ -174,7 +174,6 @@ Rules:
 
   const fields: Record<string, string> = { ...extracted?.fields };
   if (meta.author) fields.author = meta.author;
-  if (meta.siteName && !extracted) fields.site = meta.siteName;
   if (!fields.location && aiLocation) fields.location = aiLocation;
 
   const response: ParseUrlResponse = {

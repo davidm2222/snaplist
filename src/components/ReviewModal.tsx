@@ -17,10 +17,25 @@ type Status = 'loading' | 'ready' | 'error';
 
 const VALID_SHELVES = new Set<string>(['read', 'watch', 'eat', 'do', 'buy', 'other']);
 
+// Fields worth offering per shelf; any other field the parser filled in is shown too
+const SHELF_FIELDS: Record<CategoryKey, string[]> = {
+  read: ['author'],
+  watch: ['channel'],
+  eat: ['location'],
+  do: ['location'],
+  buy: [],
+  other: [],
+};
+
+const FIELD_PLACEHOLDERS: Record<string, string> = { location: 'Town ST' };
+
+const inputClass = 'w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400';
+
 function buildRawString(
   shelf: string,
   title: string,
   fields: Record<string, string>,
+  notes: string,
   hashTags: string[],
   url: string
 ): string {
@@ -30,6 +45,7 @@ function buildRawString(
     const clean = val.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
     if (clean) parts.push(`${key}:${clean}`);
   }
+  if (notes) parts.push(notes);
   const tagStr = hashTags.filter(Boolean).map(t => `#${t.replace(/^#/, '')}`).join(' ');
   return [parts.join(', '), tagStr, url].filter(Boolean).join(' ');
 }
@@ -40,13 +56,15 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
   const [status, setStatus] = useState<Status>('loading');
   const [shelf, setShelf] = useState<CategoryKey>('other');
   const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [site, setSite] = useState('');
-  const [location, setLocation] = useState('');
-  // Fields the form doesn't edit (e.g. channel) pass through unchanged
-  const [otherFields, setOtherFields] = useState<Record<string, string>>({});
+  const [fields, setFields] = useState<Record<string, string>>({});
+  const [notes, setNotes] = useState('');
   const [hashTags, setHashTags] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const visibleFields = [...new Set([
+    ...SHELF_FIELDS[shelf],
+    ...Object.keys(fields).filter(k => fields[k]),
+  ])];
 
   const editableCategories = (Object.keys(CATEGORIES) as (CategoryKey | 'all')[]).filter(
     (k): k is CategoryKey => k !== 'all'
@@ -74,12 +92,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
 
         setShelf(VALID_SHELVES.has(data.shelf) ? (data.shelf as CategoryKey) : 'other');
         setTitle(data.title || '');
-        setAuthor(data.fields?.author || '');
-        setSite(data.fields?.site || '');
-        setLocation(data.fields?.location || '');
-        setOtherFields(Object.fromEntries(
-          Object.entries(data.fields ?? {}).filter(([k]) => !['author', 'site', 'location'].includes(k))
-        ));
+        setFields(data.fields ?? {});
         setHashTags((data.hashtags ?? []).join(', '));
         setStatus('ready');
       } catch (err) {
@@ -101,17 +114,12 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
 
     setIsSubmitting(true);
     try {
-      const fields: Record<string, string> = { ...otherFields };
-      if (location.trim()) fields.location = location.trim();
-      if (author.trim()) fields.author = author.trim();
-      if (site.trim()) fields.site = site.trim();
-
       const parsedTags = hashTags
         .split(',')
         .map(t => t.trim().replace(/^#/, '').toLowerCase())
         .filter(Boolean);
 
-      const raw = buildRawString(shelf, title.trim(), fields, parsedTags, url);
+      const raw = buildRawString(shelf, title.trim(), fields, notes.trim(), parsedTags, url);
       await onSave(raw);
       onClose();
     } catch (err) {
@@ -205,43 +213,33 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
               />
             </div>
 
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Location <span className="text-zinc-400 font-normal">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Town ST"
-                className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
-              />
-            </div>
+            {/* Shelf-specific fields */}
+            {visibleFields.map((key) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1 capitalize">
+                  {key} <span className="text-zinc-400 font-normal normal-case">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={fields[key] ?? ''}
+                  onChange={(e) => setFields(f => ({ ...f, [key]: e.target.value }))}
+                  placeholder={FIELD_PLACEHOLDERS[key]}
+                  className={inputClass}
+                />
+              </div>
+            ))}
 
-            {/* Author */}
+            {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Author <span className="text-zinc-400 font-normal">(optional)</span>
+                Notes <span className="text-zinc-400 font-normal">(optional)</span>
               </label>
-              <input
-                type="text"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
-              />
-            </div>
-
-            {/* Site */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Site <span className="text-zinc-400 font-normal">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={site}
-                onChange={(e) => setSite(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                placeholder="Why you saved it, who recommended it…"
+                className={`${inputClass} resize-none`}
               />
             </div>
 

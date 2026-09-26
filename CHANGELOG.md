@@ -4,6 +4,11 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-25 — Shelf-aware review fields + notes
+
+- The URL review screen always showed Author and Site — leftovers from when it was built for articles, meaningless for a restaurant. Fields now follow the shelf (Read → author, Watch → channel, Eat/Do → location) plus anything the parser filled in. Dropped Site: the card already shows the domain.
+- Added a Notes box to the review screen; it was never there, so shared links couldn't carry a "why I saved this".
+
 ## 2026-09-25 — Fix leading comma in notes
 
 - Notes after a `key:value` field started with ", " because removing the field left its comma behind. Parser now drops empty comma segments; cards clean up old saved notes at display time rather than migrating.
