@@ -1,204 +1,80 @@
-# SnapList — Build Plan & Progress
+# SnapList — Plan
 
-## What is SnapList?
+Future work only. Shipped work moves to [CHANGELOG.md](./CHANGELOG.md).
 
-A personal capture app for saving things you want to experience, read, buy, or do. Notes are entered as freeform text and auto-parsed into structured records (category, title, fields, hashtags). Backed by Firebase with Google auth.
-
-**Note format:** `category: Title, key:value, key:value #hashtag URL`
-- `read: The Hobbit, author:Tolkien #fantasy`
-- `eat: Nobu, city:NYC #sushi`
-- `watch: Dune #scifi #epic`
-- `buy: AirPods Pro, https://amazon.com/... #apple`
-- `read: great article, https://theatlantic.com/... #politics`
+**Theme for this round:** SnapList works well once you're in it, but it's "another place to go." Reduce friction by meeting capture and retrieval where I already am — the Android share menu and Claude — and keep the app UI for browsing.
 
 ---
 
-## 📊 Overall Progress
+## Now
 
-- [x] Phase 1 — Core app end-to-end
-- [x] Phase 2 — UI polish & design system
-- [x] Phase 3 — Intent-based shelf redesign
-- [x] Phase 4 — URL support
-- [x] Phase 5 — AI-powered URL parsing
-- [x] Phase 6 — Vercel migration
-- [x] Phase 7 — Archive / Done status
-- [x] Phase 8 — Subtype / Type labels on notes
+### 1. Android share target
+Make SnapList appear in Android's share sheet, so Maps / Chrome / YouTube / Instagram → Share → SnapList.
 
----
+- [ ] Add `share_target` to `src/app/manifest.ts` (GET with `title`, `text`, `url` params → `/share`)
+- [ ] `/share` page: take shared params, pick out the URL (often buried in `text`), open the review flow pre-filled with any shared title/text
+- [ ] Handle signed-out state (sign in, then continue the share)
+- [ ] Re-install the PWA on the phone to pick up the manifest change; test from Maps, Chrome, YouTube
 
-## ✅ Phase 1 — Core App (Complete)
+*Why:* Most captures start as a link in another app. Share-in removes the open-app → paste step, and the shared text often contains what the server fetch can't see (e.g. Maps shares name + address).
 
-- [x] Firebase auth (Google sign-in)
-- [x] Firestore CRUD (add, update, delete notes)
-- [x] Text parser (`parseNote`) — category, title, fields, hashtags
-- [x] Category tabs with per-category counts
-- [x] Global search across all fields
-- [x] Compact / expanded view toggle
-- [x] Edit modal with category selector
-- [x] Import page (Supabase JSON export → Firebase)
-- [x] Dark mode support
+### 2. Smarter URL parsing
+Today `/api/parse-url` reads `<title>`/OG tags from a server-side fetch. JS-rendered or bot-blocking sites return junk — Google Maps returns just "Google Maps", so the note is useless.
 
-**Categories:** Books, Movies, Shows, Restaurants, Drinks, Activities, Other
+- [ ] Accept optional shared `title`/`text` in the request and pass it to the classifier
+- [ ] Read the final URL after redirects (`res.url`), not just the original
+- [ ] Site extractors for the worst offenders:
+  - Google Maps: place name + lat/lng from `/maps/place/<Name>/@lat,lng`; shelf `eat`/`do`
+  - YouTube: oEmbed endpoint for title/channel
+  - Amazon: product name from URL slug
+- [ ] Detect generic metadata (title equals site name, etc.) and let Claude infer from URL + shared text instead
+- [ ] Test with real links collected from actual sharing (need a failing Maps short link to start)
 
----
-
-## ✅ Phase 2 — UI Polish (Complete)
-
-- [x] Source Serif 4 font for titles/brand
-- [x] Amber accent color (replaced violet/purple)
-- [x] SVG line icons replacing emoji category icons
-- [x] Color-coded left accent bars on NoteCards per category
-- [x] Per-category colored badges
-- [x] Teal hashtag color for differentiation
-- [x] Improved dark mode text contrast
-- [x] Category tabs: wrap to 2 rows on desktop, horizontal scroll on mobile
-- [x] `resolveCategory()` helper — safe fallback to 'other' for malformed tags
-- [x] Dark mode variants for all category left border accents
+*Why:* Garbage titles undermine trust in the AI capture path.
 
 ---
 
-## ✅ Phase 3 — Intent-Based Shelf Redesign (Complete)
+## Next
 
-Replaced type-based categories (Books, Movies, Shows, Restaurants, Drinks, Activities) with intent-based shelves (Read, Watch, Eat, Do, Buy, Other). Same two-level model — input aliases just map to new shelf names.
+### 3. Location as a first-class field
+`location` is currently just a free-form `key:value` with no special meaning.
 
-- [x] New `CategoryKey`: `read | watch | eat | do | buy | other`
-- [x] Flattened alias lists per shelf in `CATEGORIES` (e.g. `book`, `article` → `read`; `movie`, `show`, `tv` → `watch`)
-- [x] Removed subtype system (granularity handled by hashtags instead)
-- [x] Legacy mapping in `resolveCategory()` — existing Firestore notes with old tags display in correct shelf without migration
-- [x] New shelf colors: read=amber, watch=violet, eat=orange, do=emerald, buy=sky, other=indigo
-- [x] New `ShoppingBagIcon` for Buy shelf
-- [x] Updated `CATEGORY_ICONS` map and `CategoryTabs` order
+- [ ] Decide representation: town/neighborhood string, coordinates, or both
+- [ ] Auto-fill from Maps extractor (coords → town via reverse geocoding or Claude)
+- [ ] Show on cards; make it searchable/filterable
+- [ ] Optional: backfill existing eat/do notes
 
----
+*Why:* Enables "what's on my list near Needham?" — both in the app and via Claude.
 
-## ✅ Phase 4 — URL Support (Complete)
+### 4. Claude connector (remote MCP server)
+Add and query notes from claude.ai (web, desktop, mobile) without opening the app.
 
-URLs are first-class in notes. Include a bare `https://...` anywhere in the input — the parser detects and strips it from the text, stores it in `fields.url`, and the card renders a clickable domain chip.
+- [ ] `/api/mcp` route on the existing Vercel app
+- [ ] Tools: `add_note(text)` (reuses `parseNote`), `search_notes(query, shelf?, hashtag?, location?)`, `list_notes(shelf)`, `mark_done(id)`
+- [ ] Auth: start with a long secret token in the connector URL; OAuth later if needed
+- [ ] Server-side Firestore access — requires `firebase-admin` + service account (changes the current "no service account" pattern)
+- [ ] Register as a custom connector in claude.ai settings
 
-- [x] `extractUrl()` in parser — detects `https?://` in input, stores in `fields.url`, removes from title/notes text
-- [x] NoteCard expanded view — clickable `domain.com ↗` link below the title
-- [x] NoteCard compact view — `↗` icon on the right when URL is present
-- [x] `url` key excluded from fields chip row (not shown as a raw field)
-- [x] Works with any shelf: `buy: AirPods, https://...` or `read: article, https://...`
-
----
-
-## ✅ Phase 5 — AI-Powered URL Parsing (Complete)
-
-Paste a bare URL → AI fetches page metadata and auto-fills title, category, tags, and fields via a review flow.
-
-- [x] `/api/parse-url` Next.js App Router route — server-side, authenticated via Firebase ID token
-- [x] Firebase token verification via REST API (no firebase-admin needed)
-- [x] Claude (claude-haiku-4-5) fetches URL content, classifies category, extracts title/fields/hashtags
-- [x] `ReviewModal` — shows AI-suggested parsed note, user can edit before saving
-- [x] NoteInput detects bare URL paste → triggers ReviewModal instead of direct save
-- [x] Graceful fallback if fetch or AI call fails
+*Why:* Capture by just telling Claude; ask questions across the list conversationally. Cheap pre-test: export notes to a Google Doc and query it via the Drive connector for a week to see if the habit sticks.
 
 ---
 
-## ✅ Phase 6 — Vercel Migration (Complete)
+## Later
 
-- [x] Vercel project connected to GitHub repo
-- [x] `output: 'export'` removed from `next.config.ts` (now empty)
-- [x] Environment variables in Vercel dashboard (`ANTHROPIC_API_KEY`, `FIREBASE_API_KEY` — server-only, no `NEXT_PUBLIC_` prefix)
-- [x] Firebase token verification uses Firebase REST API
-- [x] GitHub Pages deprecated
+- **Natural-language input** — sparkle button to AI-parse free-form text (not just URLs) into the review flow.
+- **Consolidate `LEGACY_CATEGORY_MAP`** — currently duplicated in `SnapList.tsx`, `NoteCard.tsx`, `EditModal.tsx`.
+- **Parser tests** — small unit test suite for `parseNote` before it grows further.
 
----
+## Ideas (unscoped)
 
-## 🔲 Phase 7 — Archive / Done Status
+- Email-in address for capture
+- Richer status for Read/Watch (in progress, abandoned)
+- Export of completed items ("books I read this year")
+- Shopping: purchased toggle vs. quantity
 
-**Motivation:** As notes accumulate, completed items (articles read, restaurants visited, things bought) clutter the active list. Mark them done to clear the main view without deleting them.
-
-"Done" applies uniformly across all shelves — it means different things contextually (read it, watched it, ate there, did it, bought it) but is a single concept in the data model.
-
-### 7.1 Data model
-
-- [ ] Add `done?: boolean` to `Note` type in `src/types/index.ts`
-  - `undefined` and `false` are both "active" — no Firestore migration needed
-
-### 7.2 Firestore
-
-- [ ] No schema changes needed — `updateNote` in `useNotes.tsx` already handles partial updates
-- [ ] `addNote` does not set `done` (defaults to undefined/false)
-
-### 7.3 NoteCard
-
-- [ ] Add a `✓` check button to card actions (alongside edit/delete)
-  - Active notes: outlined check icon → click marks done
-  - Done notes: filled check icon → click restores to active
-- [ ] Done note visual treatment: muted opacity + title strikethrough
-- [ ] Accept `onToggleDone: (id: string, done: boolean) => void` prop
-
-### 7.4 SnapList
-
-- [ ] Add `handleToggleDone(id, done)` → calls `updateNote(id, { done })`
-- [ ] Split `filteredNotes` into `activeNotes` and `doneNotes`
-- [ ] Render `activeNotes` in main list as before
-- [ ] Below main list: collapsible "Completed (N)" drawer
-  - Collapsed by default; `showCompleted` state (boolean, global — not per shelf)
-  - Clicking the header expands/collapses it
-  - Done notes render inside with same NoteCard (compact or expanded) + ability to uncheck
-- [ ] Category tab counts reflect only active (non-done) notes
-
----
-
-## 🏗️ Architecture
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 |
-| Auth | Firebase Auth (Google) |
-| Database | Firebase Firestore |
-| Package manager | pnpm |
-| Hosting | Vercel |
-| AI | Anthropic Claude (claude-haiku-4-5-20251001) |
-
-**Key files:**
-| File | Purpose |
-|------|---------|
-| `src/lib/parseNote.ts` | Core text parsing logic |
-| `src/types/index.ts` | Types + `CATEGORIES` constant |
-| `src/hooks/useNotes.tsx` | Firestore CRUD hook |
-| `src/hooks/useAuth.tsx` | Auth context/hook |
-| `src/components/SnapList.tsx` | Main app shell — state, filtering, layout |
-| `src/components/NoteCard.tsx` | Individual note display (compact + expanded) |
-| `src/components/NoteInput.tsx` | Text input with parse preview |
-| `src/app/api/parse-url/route.ts` | Server-side AI URL parsing endpoint |
-| `src/components/ReviewModal.tsx` | AI-parsed note review flow |
-| `src/app/import/page.tsx` | Supabase JSON → Firebase import tool |
-
----
-
----
-
-## ✅ Phase 8 — Subtype / Type Labels on Notes (Complete)
-
-When the intent-based shelf redesign (Phase 3) collapsed specific types (Books, Movies) into
-broader shelves (Read, Watch), the original input alias was discarded at parse time. The chip
-on each card showed the shelf name ("Read") rather than the specific type ("Book", "Article").
-
-This phase restores that information without changing the tab structure.
-
-- [x] `type?: string` added to Note interface — the preserved input alias (e.g. "book", "article")
-- [x] `parseNote()` returns `type` when the input alias differs from the resolved shelf key
-- [x] `useNotes.addNote()` saves `type` to Firestore (only when present — no migration needed)
-- [x] `NoteCard` resolves display type: `note.type` → legacy `tags[0]` alias → shelf name fallback
-- [x] EditModal: renamed "Category" to "Shelf"; adds a "Type" chip row per shelf with curated options (Book, Article, Link / Movie, Show, Video / etc.); resets type when shelf changes
-- [x] Legacy notes (pre-Phase 3) work automatically — their `tags[0]` was the alias ("book", "movie")
-
----
-
-## 🎯 Immediate Next Steps
-
-1. **Phase 9 (NL input)** — sparkle button triggers AI parse of free-form text → ReviewModal flow
-
----
-
-## 🔓 Open Questions
+## Open questions
 
 - NL input: explicit sparkle button, auto-detect unstructured input, or both?
-- Should completed items be exportable separately from active ones?
-- Shopping items: support a "purchased" quantity counter vs. simple done toggle?
+- MCP auth: is a secret-URL token acceptable long-term for a personal app?
+- Location: store coordinates, or is a town name enough?
+- Sharing with others: any social layer, or does that violate the anti-bloat principle?
