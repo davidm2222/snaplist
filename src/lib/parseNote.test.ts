@@ -111,6 +111,83 @@ describe('parseNote — hashtags and URLs', () => {
   });
 });
 
+describe('parseNote — #tags and @place end the title', () => {
+  it('ends the title at a hashtag with no comma', () => {
+    const r = parseNote('eat: sichuan gourmet #spicy food was really good');
+    expect(r.title).toBe('sichuan gourmet');
+    expect(r.hashTags).toEqual(['spicy']);
+    expect(r.notes).toBe('food was really good');
+  });
+
+  it('skips hashtags placed before the title', () => {
+    const r = parseNote('read: #scifi Dune #great loved it');
+    expect(r.title).toBe('Dune');
+    expect(r.hashTags).toEqual(['scifi', 'great']);
+    expect(r.notes).toBe('loved it');
+  });
+
+  it('takes one word after @ when the place is unknown', () => {
+    const r = parseNote('eat: sichuan gourmet @needham food was really good');
+    expect(r).toMatchObject({
+      title: 'sichuan gourmet',
+      fields: { location: 'needham' },
+      notes: 'food was really good',
+    });
+  });
+
+  it('matches a known multi-word place', () => {
+    const r = parseNote('eat: Tatte @chestnut hill great pastries', ['newton', 'chestnut hill']);
+    expect(r.fields.location).toBe('chestnut hill');
+    expect(r.notes).toBe('great pastries');
+  });
+
+  it('prefers the longest known match', () => {
+    const r = parseNote('do: walk @newton centre', ['newton', 'newton centre']);
+    expect(r.fields.location).toBe('newton centre');
+  });
+
+  it('does not match a known place that is only the start of a word', () => {
+    const r = parseNote('eat: Tatte @newtonville', ['newton']);
+    expect(r.fields.location).toBe('newtonville');
+  });
+
+  it('takes only one word for an unknown place, even before a comma', () => {
+    const r = parseNote('eat: Tatte @needham food was great, loved it');
+    expect(r.fields.location).toBe('needham');
+    expect(r.notes).toBe('food was great, loved it');
+  });
+
+  it('handles @place and hashtags together', () => {
+    const r = parseNote('eat: sichuan gourmet #spicy @needham food was great #datenight');
+    expect(r).toMatchObject({
+      title: 'sichuan gourmet',
+      hashTags: ['spicy', 'datenight'],
+      fields: { location: 'needham' },
+      notes: 'food was great',
+    });
+  });
+
+  it('lets an explicit location: field win over @', () => {
+    expect(parseNote('eat: Nobu @nyc, location:Boston').fields.location).toBe('Boston');
+  });
+
+  it('leaves email addresses alone', () => {
+    const r = parseNote('ask sam@example.com about it');
+    expect(r.title).toBe('ask sam@example.com about it');
+    expect(r.fields.location).toBeUndefined();
+  });
+
+  it('ignores a bare @', () => {
+    expect(parseNote('eat: Nobu @, great').fields.location).toBeUndefined();
+  });
+
+  it('does not treat # inside a URL as a hashtag', () => {
+    const r = parseNote('read: Guide https://example.com/page#section');
+    expect(r.hashTags).toEqual([]);
+    expect(r.fields.url).toBe('https://example.com/page#section');
+  });
+});
+
 describe('isBareUrl', () => {
   it.each([
     'https://example.com',

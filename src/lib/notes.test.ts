@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import type { Note } from '@/types';
 import { CATEGORIES } from '@/types';
-import { SHELVES, SHELF_TYPES, isShelf, lookupAlias, resolveShelf, resolveType, matchesSearch, normalizeDraft } from './notes';
+import {
+  SHELVES, SHELF_TYPES, isShelf, lookupAlias, resolveShelf, resolveType, matchesSearch, normalizeDraft,
+  stripHomeState, locationKey, formatLocation, knownLocations,
+} from './notes';
 
 const note = (over: Partial<Note>): Note => ({
   id: '1', userId: 'u', tags: ['other'], hashTags: [], fields: {}, title: '', notes: '', raw: '', timestamp: 0,
@@ -142,7 +145,46 @@ describe('normalizeDraft', () => {
   });
 
   it('keeps commas inside field values (no re-parse on save)', () => {
-    const d = normalizeDraft({ shelf: 'eat', title: 'x', notes: '', fields: { location: 'Newton, MA' }, hashTags: [] });
-    expect(d.fields.location).toBe('Newton, MA');
+    const d = normalizeDraft({ shelf: 'eat', title: 'x', notes: '', fields: { location: 'Portland, ME' }, hashTags: [] });
+    expect(d.fields.location).toBe('Portland, ME');
+  });
+});
+
+describe('locations', () => {
+  it('strips the home state', () => {
+    expect(stripHomeState('Newton MA')).toBe('Newton');
+    expect(stripHomeState('Newton, MA')).toBe('Newton');
+    expect(stripHomeState('chestnut hill ma')).toBe('chestnut hill');
+    expect(stripHomeState('cabot VT')).toBe('cabot VT');
+    expect(stripHomeState('MA')).toBe('MA');
+  });
+
+  it('treats case, spacing, and home state as the same place', () => {
+    expect(locationKey('Newton MA')).toBe('newton');
+    expect(locationKey(' NEWTON ')).toBe('newton');
+    expect(locationKey('chestnut  hill')).toBe('chestnut hill');
+  });
+
+  it('formats for display', () => {
+    expect(formatLocation('chestnut hill')).toBe('Chestnut Hill');
+    expect(formatLocation('cabot vt')).toBe('Cabot VT');
+    expect(formatLocation('Newton MA')).toBe('Newton');
+    expect(formatLocation('DC')).toBe('DC');
+    expect(formatLocation('cape cod')).toBe('Cape Cod');
+  });
+
+  it('lists distinct places, most used first', () => {
+    const notes = [
+      { fields: { location: 'newton' } },
+      { fields: { location: 'Newton MA' } },
+      { fields: { location: 'needham' } },
+      { fields: {} },
+    ];
+    expect(knownLocations(notes)).toEqual(['newton', 'needham']);
+  });
+
+  it('strips the home state when saving', () => {
+    const d = normalizeDraft({ shelf: 'eat', title: 'x', notes: '', fields: { location: 'Needham MA' }, hashTags: [] });
+    expect(d.fields.location).toBe('Needham');
   });
 });

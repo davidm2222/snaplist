@@ -62,14 +62,49 @@ export function matchesSearch(note: Note, query: string): boolean {
   return terms.every(term => text.includes(term));
 }
 
+// Locations are free-text place names; the state is only written when it's not the home state.
+export const HOME_STATE = 'MA';
+
+// "Newton MA" / "Newton, MA" -> "Newton". Keeps a lone "MA" (the whole state) intact.
+export function stripHomeState(location: string): string {
+  const trimmed = location.trim().replace(/\s+/g, ' ');
+  return trimmed.replace(new RegExp(`([^\\s,])[\\s,]+${HOME_STATE}$`, 'i'), '$1');
+}
+
+// Standardized form for matching: "Newton MA", "newton", " NEWTON " all -> "newton"
+export function locationKey(location: string): string {
+  return stripHomeState(location).toLowerCase();
+}
+
+// Display form: "chestnut hill" -> "Chestnut Hill", "cabot vt" -> "Cabot VT", "dc" -> "DC"
+export function formatLocation(location: string): string {
+  const words = locationKey(location).split(' ');
+  return words
+    .map((w, i) => w.length === 2 && i === words.length - 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+// Distinct location keys in use, most frequent first — for @ autocomplete and parsing
+export function knownLocations(notes: Pick<Note, 'fields'>[]): string[] {
+  const counts = new Map<string, number>();
+  for (const note of notes) {
+    const loc = note.fields.location;
+    if (!loc) continue;
+    const key = locationKey(loc);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([key]) => key);
+}
+
 // Clean a draft before saving: canonical type, trimmed title, lowercase unique hashtags,
-// no empty fields, no orphan commas in notes.
+// no empty fields, no orphan commas in notes, no home state on location.
 export function normalizeDraft(draft: NoteDraft): NoteDraft {
   const fields = Object.fromEntries(
     Object.entries(draft.fields)
       .map(([k, v]) => [k.trim().toLowerCase(), v.trim()])
       .filter(([k, v]) => k && v)
   );
+  if (fields.location) fields.location = stripHomeState(fields.location);
   const hashTags = [...new Set(
     draft.hashTags.map(t => t.trim().replace(/^#/, '').toLowerCase()).filter(Boolean)
   )];

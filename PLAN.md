@@ -69,16 +69,16 @@ Target model — each layer has one job:
 - **A place name, state optional.** Real habit: local towns lowercase, no state (`newton`, `chestnut hill`); state only when far away (`cabot VT`); regions ok (`cape cod`). Drops the old "Town ST" rule.
 - **Standardize for matching:** case-insensitive, and a trailing home state (`MA`) is ignored — `newton` = `Newton MA`. Display capitalizes ("Chestnut Hill").
 - **Auto-fill omits the home state** so shared notes match typed ones.
-- **`@place` shorthand:** `eat: sichuan gourmet @needham`. `@` first matches known locations (longest match, so `@chestnut hill` works); otherwise takes one word. A new multi-word place ends with a comma. Autocomplete suggests known places after `@`.
+- **`@place` shorthand:** `eat: sichuan gourmet @needham`. `@` first matches known locations (longest match, so `@chestnut hill` works); otherwise takes one word. A new multi-word place is entered once as `location:west newton`; after that `@west newton` matches. Autocomplete suggests known places after `@`.
 - **`#` and `@` end the title**, like a comma: `eat: sichuan gourmet #spicy @needham food was great` → title "sichuan gourmet", notes "food was great". Tags placed before the title still work.
 - **Coordinates deferred.** Claude already knows which towns are near each other; the app only needs coordinates for an in-app "nearby" filter, and would store them per place (~30 places), not per note. Standardized names make that easy later.
 
 Build:
-- [ ] Parser: `#`/`@` end the title; `@place` with known-place matching (tests first)
-- [ ] Location helpers: standardize key, display name (tests)
+- [x] Parser: `#`/`@` end the title; `@place` with known-place matching (tests first)
+- [x] Location helpers: standardize key, display name (tests)
 - [ ] Location display on cards (like `url`) instead of a generic chip
 - [ ] `@` autocomplete from known places
-- [ ] Auto-fill drops home state
+- [x] Auto-fill drops home state
 - [ ] Filter by location in the UI (alongside type filter within a shelf, and sort options: newest / A–Z)
 - [ ] Optional: backfill / clean existing locations (`Newton MA` → `newton`)
 

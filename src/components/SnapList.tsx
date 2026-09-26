@@ -15,7 +15,7 @@ import { EditModal } from './EditModal';
 import { ReviewModal } from './ReviewModal';
 import { CategoryIcon, SearchIcon, ListIcon, CardIcon, CheckCircleIcon, ChevronDownIcon } from './Icons';
 import { isBareUrl, parseNote } from '@/lib/parseNote';
-import { resolveShelf, matchesSearch } from '@/lib/notes';
+import { resolveShelf, matchesSearch, knownLocations } from '@/lib/notes';
 
 // Android share target (see manifest.ts) opens /?title=&text=&url=.
 // Apps often put the link inside `text` rather than `url`.
@@ -133,7 +133,7 @@ export function SnapList() {
         return;
       }
     }
-    await addNote(parseNote(trimmed), trimmed);
+    await addNote(parseNote(trimmed, knownLocations(notes)), trimmed);
   };
 
   // Show auth modal if not logged in

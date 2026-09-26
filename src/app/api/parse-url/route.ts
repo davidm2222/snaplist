@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { extractFromUrl, isGenericTitle, type Extracted } from '@/lib/urlExtractors';
+import { stripHomeState } from '@/lib/notes';
 
 async function verifyFirebaseToken(idToken: string): Promise<string | null> {
   const apiKey = process.env.FIREBASE_API_KEY;
@@ -143,12 +144,12 @@ Shared text: ${sharedText || '(none)'}
 URL: ${finalUrl}
 
 Return ONLY valid JSON, no markdown:
-{"shelf":"<shelf>","hashtags":["<tag1>","<tag2>"],"title":"<name>","location":"<town ST>"}
+{"shelf":"<shelf>","hashtags":["<tag1>","<tag2>"],"title":"<name>","location":"<town>"}
 
 Rules:
 - 1-3 lowercase single-word hashtags describing the thing (e.g. cuisine, genre, topic).
 - title: short name of the specific thing (not the website's name). Keep the given Name if known.
-- location: "Town ST" (e.g. "Newton MA") only if the info above says where it is; otherwise "".`;
+- location: the town, adding the state only if it is not Massachusetts (e.g. "Newton", "Cabot VT"); "" if the info above doesn't say where it is.`;
 
   let shelf = 'other';
   let hashtags: string[] = [];
@@ -179,6 +180,8 @@ Rules:
   const fields: Record<string, string> = { ...extracted?.fields };
   if (meta.author) fields.author = meta.author;
   if (!fields.location && aiLocation) fields.location = aiLocation;
+
+  if (fields.location) fields.location = stripHomeState(fields.location);
 
   const response: ParseUrlResponse = {
     shelf,

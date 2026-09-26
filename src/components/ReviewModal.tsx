@@ -28,7 +28,7 @@ const SHELF_FIELDS: Record<CategoryKey, string[]> = {
   other: [],
 };
 
-const FIELD_PLACEHOLDERS: Record<string, string> = { location: 'Town ST' };
+const FIELD_PLACEHOLDERS: Record<string, string> = { location: 'Town (+ state if not MA)' };
 
 const inputClass = 'w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400';
 

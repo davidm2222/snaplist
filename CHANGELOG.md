@@ -4,6 +4,12 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-26 — Location, part 1: parsing
+
+- **`@place` shorthand:** `eat: sichuan gourmet @needham`. Matches places you've already used (so `@chestnut hill` works), otherwise one word.
+- **`#tag` and `@place` end the title**, like a comma. Before, `sichuan gourmet #spicy food was great` put "food was great" into the title.
+- **Locations are standardized:** saves drop a trailing home state ("Needham MA" → "Needham"), matching how most notes were already typed. Helpers treat `newton` / `Newton MA` as one place and capitalize for display.
+
 ## 2026-09-26 — F4: small fixes
 
 - **Toasts.** Failures when adding, saving from review, marking done, deleting, or loading notes now show an error toast; before they only reached the browser console, so a failed save on the phone was invisible.
