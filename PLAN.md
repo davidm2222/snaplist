@@ -55,6 +55,7 @@ Add and query notes from claude.ai (web, desktop, mobile) without opening the ap
 
 - **Commas in typed titles** — `parseNote` ends the title at the first comma, so "Is It Aging, or Is It ADHD?" splits into title + notes. Options: quoted titles (`read: "Is It Aging, or Is It ADHD?"`), or only split on commas followed by `key:` / known structure. Decide, then add tests first.
 
+- **Reader view (Instapaper-style)** — save the article text for Read → Article notes and show it clean (no ads, no nav) in the app for mobile reading. Would need the full page, not just `<head>`; Mozilla's Readability library does the extraction. Blocked or paywalled sites (The Atlantic) may only give a partial body; gift links might help. Also raises storage questions (Firestore 1 MB/doc limit).
 - Email-in address for capture
 - Richer status for Read/Watch (in progress, abandoned)
 - Export of completed items ("books I read this year")
