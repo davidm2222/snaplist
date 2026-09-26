@@ -1,5 +1,5 @@
 // Shelf/type/search logic shared by the parser, components, and (later) server routes.
-import { CATEGORIES, CategoryKey, Note } from '@/types';
+import { CATEGORIES, CategoryKey, Note, NoteDraft } from '@/types';
 
 // Display order for tabs and pickers
 export const SHELVES: CategoryKey[] = ['read', 'watch', 'eat', 'do', 'buy', 'other'];
@@ -26,9 +26,10 @@ export function lookupAlias(word: string): { shelf: CategoryKey; type?: string }
   return null;
 }
 
-// The shelf lives in tags[0]. Notes from before the shelf redesign (2026-02-21) store
-// the old category there instead ("book", "drink"), so resolve it through the aliases.
-export function resolveShelf(note: Pick<Note, 'tags'>): CategoryKey {
+// Prefer the explicit shelf (all notes since the F3 migration). The tags[0] fallback covers
+// notes written by older code; pre-redesign values ("book", "drink") resolve via aliases.
+export function resolveShelf(note: Pick<Note, 'tags' | 'shelf'>): CategoryKey {
+  if (isShelf(note.shelf)) return note.shelf;
   const tag = note.tags?.[0];
   if (!tag) return 'other';
   if (isShelf(tag)) return tag;
@@ -44,18 +45,42 @@ export function resolveType(note: Pick<Note, 'tags' | 'type'>): string | null {
   return lookupAlias(raw)?.type ?? raw;
 }
 
-// Every whitespace-separated term must appear somewhere in the note
+// Every whitespace-separated term must appear somewhere in the note.
+// Searches current content only — not `raw`, which can be stale after edits.
 export function matchesSearch(note: Note, query: string): boolean {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (terms.length === 0) return true;
   const text = [
     note.title,
     note.notes,
-    note.raw,
-    ...note.tags,
+    resolveShelf(note),
+    resolveType(note) ?? '',
     ...note.hashTags,
     ...Object.keys(note.fields),
     ...Object.values(note.fields),
   ].join(' ').toLowerCase();
   return terms.every(term => text.includes(term));
+}
+
+// Clean a draft before saving: canonical type, trimmed title, lowercase unique hashtags,
+// no empty fields, no orphan commas in notes.
+export function normalizeDraft(draft: NoteDraft): NoteDraft {
+  const fields = Object.fromEntries(
+    Object.entries(draft.fields)
+      .map(([k, v]) => [k.trim().toLowerCase(), v.trim()])
+      .filter(([k, v]) => k && v)
+  );
+  const hashTags = [...new Set(
+    draft.hashTags.map(t => t.trim().replace(/^#/, '').toLowerCase()).filter(Boolean)
+  )];
+  const result: NoteDraft = {
+    shelf: draft.shelf,
+    title: draft.title.trim(),
+    notes: draft.notes.split(',').map(p => p.trim()).filter(Boolean).join(', '),
+    fields,
+    hashTags,
+  };
+  const type = draft.type?.trim().toLowerCase();
+  if (type) result.type = lookupAlias(type)?.type ?? type;
+  return result;
 }

@@ -45,9 +45,9 @@ Target model — each layer has one job:
 
 - [x] Add explicit `shelf` field and `updatedAt`; normalize `type`
 - [x] One-time migration script: `tags[0]` → `shelf` + `type`; dry-run preview before writing (applied 2026-09-26 to all 119 notes; `tags` left in place)
-- [ ] App reads `shelf`; new notes write `shelf` + `updatedAt`
-- [ ] One write path: `saveNote(draft)` takes a structured note. The parser only converts typed text → draft. ReviewModal builds a draft directly (no rebuild-a-string-and-reparse), EditModal uses the same path.
-- [ ] `raw`: decided keep as "original input" — never updated after create, excluded from search
+- [x] App reads `shelf`; new notes write `shelf` + `updatedAt`
+- [x] One write path: `saveNote(draft)` takes a structured note. The parser only converts typed text → draft. ReviewModal builds a draft directly (no rebuild-a-string-and-reparse), EditModal uses the same path.
+- [x] `raw`: decided keep as "original input" — never updated after create, excluded from search
 - [ ] After a few days of normal use: remove `tags` field (script) and legacy resolution; then delete the service account key
 
 ### F4. Error handling & small UX fixes

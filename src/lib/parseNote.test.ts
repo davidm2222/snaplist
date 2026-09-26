@@ -4,43 +4,42 @@ import { parseNote, isBareUrl } from './parseNote';
 describe('parseNote — shelf and type', () => {
   it('uses the shelf name directly, with no type', () => {
     const r = parseNote('eat: Nobu');
-    expect(r.category).toBe('eat');
+    expect(r.shelf).toBe('eat');
     expect(r.type).toBeUndefined();
-    expect(r.tags).toEqual(['eat']);
   });
 
   it('maps an alias to its shelf and keeps it as the type', () => {
     const r = parseNote('book: The Hobbit');
-    expect(r.category).toBe('read');
+    expect(r.shelf).toBe('read');
     expect(r.type).toBe('book');
   });
 
   it('stores the canonical type for synonyms', () => {
-    expect(parseNote('film: Dune')).toMatchObject({ category: 'watch', type: 'movie' });
-    expect(parseNote('tv: Severance')).toMatchObject({ category: 'watch', type: 'show' });
-    expect(parseNote('beer: Heady Topper')).toMatchObject({ category: 'eat', type: 'drink' });
-    expect(parseNote('books: Dune')).toMatchObject({ category: 'read', type: 'book' });
+    expect(parseNote('film: Dune')).toMatchObject({ shelf: 'watch', type: 'movie' });
+    expect(parseNote('tv: Severance')).toMatchObject({ shelf: 'watch', type: 'show' });
+    expect(parseNote('beer: Heady Topper')).toMatchObject({ shelf: 'eat', type: 'drink' });
+    expect(parseNote('books: Dune')).toMatchObject({ shelf: 'read', type: 'book' });
   });
 
   it('files shelf aliases with no type', () => {
     const r = parseNote('food: Tacos');
-    expect(r.category).toBe('eat');
+    expect(r.shelf).toBe('eat');
     expect(r.type).toBeUndefined();
   });
 
   it('is case-insensitive on the prefix', () => {
-    expect(parseNote('Movie: Dune').category).toBe('watch');
+    expect(parseNote('Movie: Dune').shelf).toBe('watch');
   });
 
   it('falls back to other when there is no prefix', () => {
     const r = parseNote('Some random thing');
-    expect(r.category).toBe('other');
+    expect(r.shelf).toBe('other');
     expect(r.title).toBe('Some random thing');
   });
 
   it('falls back to other when the prefix is not a known alias', () => {
     const r = parseNote('podcast: Hardcore History');
-    expect(r.category).toBe('other');
+    expect(r.shelf).toBe('other');
     expect(r.title).toBe('podcast: Hardcore History');
   });
 });
@@ -103,7 +102,7 @@ describe('parseNote — hashtags and URLs', () => {
       'eat: Coco Ramen, location:Newton Centre MA, great tonkotsu #ramen https://maps.app.goo.gl/abc?g_st=ac'
     );
     expect(r).toMatchObject({
-      category: 'eat',
+      shelf: 'eat',
       title: 'Coco Ramen',
       fields: { location: 'Newton Centre MA', url: 'https://maps.app.goo.gl/abc?g_st=ac' },
       notes: 'great tonkotsu',

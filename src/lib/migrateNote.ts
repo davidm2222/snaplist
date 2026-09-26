@@ -11,7 +11,7 @@ type StoredNote = Pick<Note, 'tags' | 'type' | 'timestamp'> & { shelf?: string; 
 export function planShelfMigration(note: StoredNote): NoteChanges {
   const changes: NoteChanges = {};
 
-  const shelf = resolveShelf(note);
+  const shelf = resolveShelf({ tags: note.tags }); // from tags, the pre-migration source
   if (note.shelf !== shelf) changes.shelf = shelf;
 
   const type = resolveType(note);

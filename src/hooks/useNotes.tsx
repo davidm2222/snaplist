@@ -14,9 +14,24 @@ import {
   deleteField,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Note } from '@/types';
+import { Note, NoteDraft } from '@/types';
 import { useAuth } from './useAuth';
-import { parseNote } from '@/lib/parseNote';
+import { normalizeDraft } from '@/lib/notes';
+
+// The single place a draft becomes Firestore data. `tags` mirrors shelf so older code
+// (and a rollback) still works; drop it with the legacy-field cleanup.
+function toFirestore(draft: NoteDraft) {
+  const d = normalizeDraft(draft);
+  return {
+    shelf: d.shelf,
+    tags: [d.shelf],
+    type: d.type,
+    title: d.title,
+    notes: d.notes,
+    fields: d.fields,
+    hashTags: d.hashTags,
+  };
+}
 
 export function useNotes() {
   const { user } = useAuth();
@@ -58,48 +73,41 @@ export function useNotes() {
     return () => unsubscribe();
   }, [user]);
 
-  // Add a new note
-  const addNote = useCallback(async (raw: string) => {
+  // Create a note. raw = what the user originally entered (typed text or shared URL).
+  const addNote = useCallback(async (draft: NoteDraft, raw: string) => {
     if (!user) throw new Error('Must be logged in');
     if (!db) throw new Error('Database not initialized');
 
-    const parsed = parseNote(raw);
-
-    const noteData: Record<string, unknown> = {
+    const { type, ...content } = toFirestore(draft);
+    const now = Date.now();
+    await addDoc(collection(db, 'notes'), {
+      ...content,
+      ...(type ? { type } : {}),
       userId: user.uid,
       raw,
-      title: parsed.title,
-      tags: parsed.tags,
-      hashTags: parsed.hashTags,
-      fields: parsed.fields,
-      notes: parsed.notes,
-      timestamp: Date.now(),
-    };
-    if (parsed.type !== undefined) noteData.type = parsed.type;
-
-    try {
-      await addDoc(collection(db, 'notes'), noteData);
-    } catch (err) {
-      console.error('Error adding note:', err);
-      throw err;
-    }
+      timestamp: now,
+      updatedAt: now,
+    });
   }, [user]);
 
-  // Update an existing note
-  const updateNote = useCallback(async (id: string, updates: Partial<Note>) => {
+  // Replace a note's content. Never touches raw, timestamp, or done.
+  const saveNote = useCallback(async (id: string, draft: NoteDraft) => {
     if (!user) throw new Error('Must be logged in');
     if (!db) throw new Error('Database not initialized');
 
-    try {
-      // Firestore rejects undefined values; treat undefined as "remove this field"
-      const data = Object.fromEntries(
-        Object.entries(updates).map(([k, v]) => [k, v === undefined ? deleteField() : v])
-      );
-      await updateDoc(doc(db, 'notes', id), data);
-    } catch (err) {
-      console.error('Error updating note:', err);
-      throw err;
-    }
+    const { type, ...content } = toFirestore(draft);
+    await updateDoc(doc(db, 'notes', id), {
+      ...content,
+      type: type ?? deleteField(),
+      updatedAt: Date.now(),
+    });
+  }, [user]);
+
+  const setDone = useCallback(async (id: string, done: boolean) => {
+    if (!user) throw new Error('Must be logged in');
+    if (!db) throw new Error('Database not initialized');
+
+    await updateDoc(doc(db, 'notes', id), { done, updatedAt: Date.now() });
   }, [user]);
 
   // Delete a note
@@ -120,7 +128,8 @@ export function useNotes() {
     loading,
     error,
     addNote,
-    updateNote,
+    saveNote,
+    setDone,
     deleteNote,
   };
 }

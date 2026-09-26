@@ -40,12 +40,14 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 | `src/app/manifest.ts` | PWA manifest |
 | `src/app/import/page.tsx` | One-time Supabase JSON → Firestore import |
 
-## Data model gotchas
+## Data model
 
-- **Shelf is stored as `tags[0]`**, not a dedicated field. Old notes have pre-shelf tags (`book`, `movie`, `drink`, …); these are resolved at read time by `resolveShelf()` in `src/lib/notes.ts` (via the alias list). No migration was ever run — keep that working.
-- **`type`** preserves the input alias (`book`, `article`) so cards can say "Book" instead of "Read". Optional; absent on older notes.
+- **One save path.** Every screen builds a `NoteDraft` (`src/types/index.ts`); `useNotes` saves it via `addNote(draft, raw)` / `saveNote(id, draft)` / `setDone`. `toFirestore()` in `useNotes` is the only place a draft becomes Firestore data, and `normalizeDraft()` does all cleanup. Don't write notes any other way.
+- **`shelf`** is an explicit field on every note (F3 migration, 2026-09-26). `tags` is legacy — still written as `[shelf]` so a code rollback works; `resolveShelf()` falls back to it. Scheduled for removal (see PLAN).
+- **`type`** is the canonical type within the shelf (`book`, `cafe`); synonyms normalize (`film` → `movie`). Optional.
+- **`raw`** is the original input at creation (typed text, or the shared URL). Never updated, not searched.
 - **`fields`** is a free-form `Record<string,string>`. `fields.url` is special (rendered as a link, hidden from the chip row). `fields.location` is `Town ST` text, auto-filled by URL parsing. Everything else is a free-form user label.
-- **Field values can't contain commas** — notes are saved as a raw string and re-parsed, and `parseNote` splits fields on commas. `ReviewModal` strips them.
+- **Commas:** typed input is split on commas by `parseNote`, so a typed field value can't contain one. Drafts from the review/edit screens are saved directly, so commas there are fine.
 - **`done`**: `undefined`/`false` = active. Optional fields are only written when present, so schema additions need no migration.
 
 ## Conventions

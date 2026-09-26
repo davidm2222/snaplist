@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { CategoryKey, CATEGORIES } from '@/types';
+import { CategoryKey, CATEGORIES, NoteDraft } from '@/types';
 import { CategoryIcon } from './Icons';
 import { SHELVES, isShelf } from '@/lib/notes';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,7 +10,7 @@ import type { ParseUrlResponse } from '@/app/api/parse-url/route';
 interface ReviewModalProps {
   url: string;
   sharedText?: string; // text the Android share sheet sent with the link
-  onSave: (raw: string) => Promise<void>;
+  onSave: (draft: NoteDraft) => Promise<void>;
   onClose: () => void;
 }
 
@@ -30,25 +30,6 @@ const SHELF_FIELDS: Record<CategoryKey, string[]> = {
 const FIELD_PLACEHOLDERS: Record<string, string> = { location: 'Town ST' };
 
 const inputClass = 'w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400';
-
-function buildRawString(
-  shelf: string,
-  title: string,
-  fields: Record<string, string>,
-  notes: string,
-  hashTags: string[],
-  url: string
-): string {
-  const parts = [`${shelf}: ${title}`];
-  for (const [key, val] of Object.entries(fields)) {
-    // parseNote splits fields on commas, so strip them from values ("Newton Centre, MA")
-    const clean = val.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
-    if (clean) parts.push(`${key}:${clean}`);
-  }
-  if (notes) parts.push(notes);
-  const tagStr = hashTags.filter(Boolean).map(t => `#${t.replace(/^#/, '')}`).join(' ');
-  return [parts.join(', '), tagStr, url].filter(Boolean).join(' ');
-}
 
 export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalProps) {
   const { getIdToken } = useAuth();
@@ -110,13 +91,13 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
 
     setIsSubmitting(true);
     try {
-      const parsedTags = hashTags
-        .split(',')
-        .map(t => t.trim().replace(/^#/, '').toLowerCase())
-        .filter(Boolean);
-
-      const raw = buildRawString(shelf, title.trim(), fields, notes.trim(), parsedTags, url);
-      await onSave(raw);
+      await onSave({
+        shelf,
+        title,
+        notes,
+        fields: { ...fields, url },
+        hashTags: hashTags.split(','),
+      });
       onClose();
     } catch (err) {
       console.error('Failed to save:', err);

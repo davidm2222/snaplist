@@ -1,17 +1,29 @@
-// Note type matching the Supabase schema
+// A note as stored in Firestore
 export interface Note {
   id: string;
   userId: string;
-  tags: string[];
+  shelf?: CategoryKey;     // set on every note since the F3 migration (2026-09-26)
+  tags: string[];          // legacy: [shelf]; still written for rollback safety, to be removed
   hashTags: string[];
   fields: Record<string, string>;
   title: string;
   notes: string;
-  raw: string;
-  timestamp: number;
-  createdAt?: string;
+  raw: string;             // original input at creation; never updated, not searched
+  timestamp: number;       // created, ms
+  updatedAt?: number;      // ms
+  createdAt?: string;      // legacy (Supabase import)
   done?: boolean;
-  type?: string; // Original input alias: "book", "article", "movie", "show", etc.
+  type?: string;           // canonical type within the shelf ("book", "cafe")
+}
+
+// The editable content of a note. Every screen builds one of these; useNotes saves it.
+export interface NoteDraft {
+  shelf: CategoryKey;
+  type?: string;
+  title: string;
+  notes: string;
+  fields: Record<string, string>;
+  hashTags: string[];
 }
 
 // Category definitions

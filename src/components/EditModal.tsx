@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { Note, CATEGORIES, CategoryKey } from '@/types';
+import { Note, NoteDraft, CATEGORIES, CategoryKey } from '@/types';
 import { CategoryIcon } from './Icons';
 import { SHELVES, SHELF_TYPES, resolveShelf, resolveType } from '@/lib/notes';
 
 interface EditModalProps {
   note: Note;
-  onSave: (id: string, updates: Partial<Note>) => Promise<void>;
+  onSave: (id: string, draft: NoteDraft) => Promise<void>;
   onClose: () => void;
 }
 
@@ -33,22 +33,16 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
     setIsSubmitting(true);
     setError('');
     try {
-      const parsedHashTags = hashTags
-        .split(',')
-        .map(t => t.trim().replace(/^#/, '').toLowerCase())
-        .filter(Boolean);
-
-      const updates: Partial<Note> = {
+      const draft: NoteDraft = {
+        shelf: category,
+        type,
         title,
-        tags: [category],
+        notes,
         fields,
-        hashTags: parsedHashTags,
-        // Also drops orphan commas saved by the old parser (", , great omakase")
-        notes: notes.split(',').map(p => p.trim()).filter(Boolean).join(', '),
-        type: type || undefined,
+        hashTags: hashTags.split(','),
       };
 
-      await onSave(note.id, updates);
+      await onSave(note.id, draft);
       onClose();
     } catch (err) {
       console.error('Failed to save:', err);

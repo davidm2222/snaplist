@@ -1,15 +1,5 @@
-import { CategoryKey } from '@/types';
+import { CategoryKey, NoteDraft } from '@/types';
 import { lookupAlias } from './notes';
-
-interface ParsedNote {
-  category: CategoryKey;
-  type?: string; // Canonical type from the prefix ("film:" → "movie"); absent when the prefix is a shelf alias
-  title: string;
-  fields: Record<string, string>;
-  hashTags: string[];
-  notes: string;
-  tags: string[];
-}
 
 // Find category from input text
 function findCategory(text: string): { category: CategoryKey; alias?: string; remainder: string } {
@@ -73,7 +63,8 @@ export function isBareUrl(input: string): boolean {
   return /^([a-zA-Z]+:\s*)?https?:\/\/[^\s]+(\s+#[a-zA-Z0-9_]+)*\s*$/.test(input.trim());
 }
 
-export function parseNote(raw: string): ParsedNote {
+// Typed text -> structured draft. type is the canonical type from the prefix ("film:" -> "movie").
+export function parseNote(raw: string): NoteDraft {
   // Step 1: Find category
   const { category, alias, remainder } = findCategory(raw);
 
@@ -95,14 +86,14 @@ export function parseNote(raw: string): ParsedNote {
 
   if (url) fields.url = url;
 
-  return {
-    category,
-    type: alias,
+  const draft: NoteDraft = {
+    shelf: category,
     title,
     fields,
     hashTags,
     // Removing fields leaves orphan commas (", , great omakase") — drop empty segments
     notes: notes.split(',').map(p => p.trim()).filter(Boolean).join(', '),
-    tags: [category]
   };
+  if (alias) draft.type = alias;
+  return draft;
 }

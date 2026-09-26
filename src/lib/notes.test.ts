@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Note } from '@/types';
 import { CATEGORIES } from '@/types';
-import { SHELVES, SHELF_TYPES, isShelf, lookupAlias, resolveShelf, resolveType, matchesSearch } from './notes';
+import { SHELVES, SHELF_TYPES, isShelf, lookupAlias, resolveShelf, resolveType, matchesSearch, normalizeDraft } from './notes';
 
 const note = (over: Partial<Note>): Note => ({
   id: '1', userId: 'u', tags: ['other'], hashTags: [], fields: {}, title: '', notes: '', raw: '', timestamp: 0,
@@ -27,6 +27,10 @@ describe('lookupAlias', () => {
 });
 
 describe('resolveShelf', () => {
+  it('prefers the explicit shelf field', () => {
+    expect(resolveShelf(note({ shelf: 'buy', tags: ['gift'] }))).toBe('buy');
+  });
+
   it('reads the shelf from tags[0]', () => {
     expect(resolveShelf(note({ tags: ['watch'] }))).toBe('watch');
   });
@@ -79,6 +83,15 @@ describe('matchesSearch', () => {
     expect(matchesSearch(n, 'coco boston')).toBe(false);
   });
 
+  it('matches shelf and type names', () => {
+    expect(matchesSearch(note({ shelf: 'watch', type: 'film', title: 'Dune' }), 'movie')).toBe(true);
+    expect(matchesSearch(note({ shelf: 'watch', title: 'Dune' }), 'watch dune')).toBe(true);
+  });
+
+  it('ignores stale raw text', () => {
+    expect(matchesSearch(note({ title: 'Nobu Downtown', raw: 'eat: Nobu Uptown' }), 'uptown')).toBe(false);
+  });
+
   it('matches everything for an empty query', () => {
     expect(matchesSearch(n, '   ')).toBe(true);
   });
@@ -101,5 +114,35 @@ describe('CATEGORIES', () => {
     expect(SHELF_TYPES.watch).toEqual(['movie', 'show', 'video']);
     expect(SHELF_TYPES.buy).toEqual(['gift']);
     expect(SHELF_TYPES.other).toEqual([]);
+  });
+});
+
+describe('normalizeDraft', () => {
+  it('cleans every part of a draft', () => {
+    expect(normalizeDraft({
+      shelf: 'watch',
+      type: 'Film',
+      title: '  Dune ',
+      notes: ', , loved it, ',
+      fields: { ' Author ': ' Herbert ', empty: '  ', '': 'x' },
+      hashTags: ['#SciFi', 'scifi', ' epic '],
+    })).toEqual({
+      shelf: 'watch',
+      type: 'movie',
+      title: 'Dune',
+      notes: 'loved it',
+      fields: { author: 'Herbert' },
+      hashTags: ['scifi', 'epic'],
+    });
+  });
+
+  it('omits an empty type', () => {
+    expect(normalizeDraft({ shelf: 'eat', type: '', title: 'x', notes: '', fields: {}, hashTags: [] }))
+      .not.toHaveProperty('type');
+  });
+
+  it('keeps commas inside field values (no re-parse on save)', () => {
+    const d = normalizeDraft({ shelf: 'eat', title: 'x', notes: '', fields: { location: 'Newton, MA' }, hashTags: [] });
+    expect(d.fields.location).toBe('Newton, MA');
   });
 });

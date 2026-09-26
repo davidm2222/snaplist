@@ -4,6 +4,13 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-26 — F3: one save path
+
+- **Every screen now saves the same way.** Typing, the review screen, and editing each build a structured `NoteDraft`; `useNotes` turns it into Firestore data in one function. Before, the review screen rebuilt a text string and re-parsed it (why commas broke fields) and the edit screen wrote raw updates (why `undefined` silently failed).
+- `normalizeDraft()` does all cleanup in one tested place: canonical type, lowercase unique hashtags, no empty fields, no orphan commas.
+- The app reads the explicit `shelf` field. New notes also write `tags: [shelf]` so reverting the code would still work.
+- `raw` is now the original input only (typed text, or the shared URL), never updated after creation, and excluded from search — edited notes no longer match their old wording. Search now matches shelf and type names instead ("movie", "gift").
+
 ## 2026-09-26 — F3 data migration: explicit shelf
 
 - Every note now has a `shelf` field, a canonical `type`, and `updatedAt`. Previously the shelf hid in `tags[0]`, and 81 of 119 notes still carried pre-redesign values (`movie`, `restaurant`, …) resolved at read time.

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotes } from '@/hooks/useNotes';
-import { CategoryKey, CATEGORIES, Note } from '@/types';
+import { CategoryKey, CATEGORIES, Note, NoteDraft } from '@/types';
 import { Header } from './Header';
 import { NoteInput } from './NoteInput';
 import { CategoryTabs } from './CategoryTabs';
@@ -13,7 +13,7 @@ import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
 import { ReviewModal } from './ReviewModal';
 import { CategoryIcon, SearchIcon, ListIcon, CardIcon, CheckCircleIcon, ChevronDownIcon } from './Icons';
-import { isBareUrl } from '@/lib/parseNote';
+import { isBareUrl, parseNote } from '@/lib/parseNote';
 import { resolveShelf, matchesSearch } from '@/lib/notes';
 
 // Android share target (see manifest.ts) opens /?title=&text=&url=.
@@ -30,7 +30,7 @@ function readShareParams(): { url: string | null; text: string } | null {
 
 export function SnapList() {
   const { user, loading: authLoading } = useAuth();
-  const { notes, loading: notesLoading, addNote, updateNote, deleteNote } = useNotes();
+  const { notes, loading: notesLoading, addNote, saveNote, setDone, deleteNote } = useNotes();
   const [activeTab, setActiveTab] = useState<CategoryKey | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -77,7 +77,7 @@ export function SnapList() {
   }, [notes, activeTab, searchQuery]);
 
   const handleToggleDone = async (id: string, done: boolean) => {
-    await updateNote(id, { done });
+    await setDone(id, done);
   };
 
   const handleDelete = async (id: string) => {
@@ -94,8 +94,8 @@ export function SnapList() {
     setEditingNote(note);
   };
 
-  const handleSaveEdit = async (id: string, updates: Partial<Note>) => {
-    await updateNote(id, updates);
+  const handleSaveEdit = async (id: string, draft: NoteDraft) => {
+    await saveNote(id, draft);
   };
 
   const handleNoteSubmit = async (raw: string) => {
@@ -107,7 +107,7 @@ export function SnapList() {
         return;
       }
     }
-    await addNote(trimmed);
+    await addNote(parseNote(trimmed), trimmed);
   };
 
   // Show auth modal if not logged in
@@ -258,7 +258,7 @@ export function SnapList() {
         <ReviewModal
           url={reviewingUrl}
           sharedText={share?.url === reviewingUrl ? share.text : undefined}
-          onSave={addNote}
+          onSave={(draft) => addNote(draft, reviewingUrl)}
           onClose={() => setReviewingUrl(null)}
         />
       )}
