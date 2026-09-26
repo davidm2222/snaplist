@@ -64,11 +64,23 @@ Target model — each layer has one job:
 ## Next
 
 ### 1. Location as a first-class field
-Decided: plain `Town ST` text (no commas — the parser splits fields on commas). Coordinates later only if a map view is wanted. Already auto-filled for Maps links and by the classifier when the shared text says where something is.
+`location` stays a regular field (fields are free-form `key:value`), but the app treats it specially. Decided 2026-09-26, based on the 57 of 121 notes that already have one:
 
-- [ ] Give `location` special display on cards (like `url`) instead of a generic chip
+- **A place name, state optional.** Real habit: local towns lowercase, no state (`newton`, `chestnut hill`); state only when far away (`cabot VT`); regions ok (`cape cod`). Drops the old "Town ST" rule.
+- **Standardize for matching:** case-insensitive, and a trailing home state (`MA`) is ignored — `newton` = `Newton MA`. Display capitalizes ("Chestnut Hill").
+- **Auto-fill omits the home state** so shared notes match typed ones.
+- **`@place` shorthand:** `eat: sichuan gourmet @needham`. `@` first matches known locations (longest match, so `@chestnut hill` works); otherwise takes one word. A new multi-word place ends with a comma. Autocomplete suggests known places after `@`.
+- **`#` and `@` end the title**, like a comma: `eat: sichuan gourmet #spicy @needham food was great` → title "sichuan gourmet", notes "food was great". Tags placed before the title still work.
+- **Coordinates deferred.** Claude already knows which towns are near each other; the app only needs coordinates for an in-app "nearby" filter, and would store them per place (~30 places), not per note. Standardized names make that easy later.
+
+Build:
+- [ ] Parser: `#`/`@` end the title; `@place` with known-place matching (tests first)
+- [ ] Location helpers: standardize key, display name (tests)
+- [ ] Location display on cards (like `url`) instead of a generic chip
+- [ ] `@` autocomplete from known places
+- [ ] Auto-fill drops home state
 - [ ] Filter by location in the UI (alongside type filter within a shelf, and sort options: newest / A–Z)
-- [ ] Optional: backfill existing eat/do notes
+- [ ] Optional: backfill / clean existing locations (`Newton MA` → `newton`)
 
 *Why:* Enables "what's on my list near Needham?" — both in the app and via Claude.
 
@@ -102,5 +114,5 @@ Add and query notes from claude.ai (web, desktop, mobile) without opening the ap
 
 - NL input: explicit sparkle button, auto-detect unstructured input, or both?
 - MCP auth: is a secret-URL token acceptable long-term for a personal app?
-- Location: store coordinates, or is a town name enough?
+- Location: coordinates only if an in-app "nearby" filter is wanted (per-place lookup table).
 - Sharing with others: any social layer, or does that violate the anti-bloat principle?
