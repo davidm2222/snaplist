@@ -32,7 +32,8 @@ No test suite yet. Verify parser changes by hand: add a note and check the resul
 | `src/components/ReviewModal.tsx` | AI-assisted URL capture review |
 | `src/components/NoteCard.tsx` | Note display (compact + expanded) |
 | `src/components/EditModal.tsx` | Edit shelf / type / text |
-| `src/app/api/parse-url/route.ts` | Fetch page metadata (regex on `<head>`) + Claude Haiku classification |
+| `src/app/api/parse-url/route.ts` | Follow redirects, fetch metadata (regex on `<head>`), run site extractors, Claude Haiku classification |
+| `src/lib/urlExtractors.ts` | Site-specific title/location extraction (Maps, Amazon, YouTube) + generic-title detection |
 | `src/app/manifest.ts` | PWA manifest |
 | `src/app/import/page.tsx` | One-time Supabase JSON → Firestore import |
 
@@ -40,7 +41,8 @@ No test suite yet. Verify parser changes by hand: add a note and check the resul
 
 - **Shelf is stored as `tags[0]`**, not a dedicated field. Old notes have pre-shelf tags (`book`, `movie`, `drink`, …); these are resolved at read time by a `LEGACY_CATEGORY_MAP`. No migration was ever run — keep that working. ⚠ The map is duplicated in `SnapList.tsx`, `NoteCard.tsx`, and `EditModal.tsx`; change all three (or consolidate).
 - **`type`** preserves the input alias (`book`, `article`) so cards can say "Book" instead of "Read". Optional; absent on older notes.
-- **`fields`** is a free-form `Record<string,string>`. `fields.url` is special (rendered as a link, hidden from the chip row). Everything else — including `location` — is just a user-typed key with no special handling yet.
+- **`fields`** is a free-form `Record<string,string>`. `fields.url` is special (rendered as a link, hidden from the chip row). `fields.location` is `Town ST` text, auto-filled by URL parsing. Everything else is a free-form user label.
+- **Field values can't contain commas** — notes are saved as a raw string and re-parsed, and `parseNote` splits fields on commas. `ReviewModal` strips them.
 - **`done`**: `undefined`/`false` = active. Optional fields are only written when present, so schema additions need no migration.
 
 ## Conventions

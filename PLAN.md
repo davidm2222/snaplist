@@ -8,40 +8,27 @@ Future work only. Shipped work moves to [CHANGELOG.md](./CHANGELOG.md).
 
 ## Now
 
-### 1. Android share target — verify on device
-Code shipped (see CHANGELOG). Remaining:
+### Verify capture on device
+Share target and smarter URL parsing shipped (see CHANGELOG). Remaining:
 
-- [ ] Re-install the PWA on the phone to pick up the manifest change; test from Maps, Chrome, YouTube, and a plain-text share
-
-### 2. Smarter URL parsing
-Today `/api/parse-url` reads `<title>`/OG tags from a server-side fetch. JS-rendered or bot-blocking sites return junk — Google Maps returns just "Google Maps", so the note is useless.
-
-- [ ] Accept optional shared `title`/`text` in the request and pass it to the classifier (SnapList already captures it from the share)
-- [ ] Read the final URL after redirects (`res.url`), not just the original
-- [ ] Site extractors for the worst offenders:
-  - Google Maps: short links redirect to `/maps/place/<Name>,+<street>,+<town>,+<ST>+<zip>/data=...` — name and full address are in the path (coords not always present); shelf `eat`/`do`. Test link: `https://maps.app.goo.gl/pCwde1bhyiEmYtEn7` (Coco Ramen, Newton Centre)
-  - YouTube: oEmbed endpoint for title/channel
-  - Amazon: product name from URL slug
-- [ ] Detect generic metadata (title equals site name, etc.) and let Claude infer from URL + shared text instead
-- [ ] Test with real links collected from actual sharing
-
-*Why:* Garbage titles undermine trust in the AI capture path.
+- [x] Share target shows up and opens the review flow (confirmed 2026-09-25)
+- [ ] Share from Maps → name + location filled; from YouTube → title + channel; Amazon → product name
+- [ ] Collect any links that still produce junk titles and add extractors as needed
 
 ---
 
 ## Next
 
-### 3. Location as a first-class field
-`location` is currently just a free-form `key:value` with no special meaning.
+### 1. Location as a first-class field
+Decided: plain `Town ST` text (no commas — the parser splits fields on commas). Coordinates later only if a map view is wanted. Already auto-filled for Maps links and by the classifier when the shared text says where something is.
 
-- [ ] Decide representation: town/neighborhood string, coordinates, or both
-- [ ] Auto-fill from Maps extractor (coords → town via reverse geocoding or Claude)
-- [ ] Show on cards; make it searchable/filterable
+- [ ] Give `location` special display on cards (like `url`) instead of a generic chip
+- [ ] Filter by location in the UI
 - [ ] Optional: backfill existing eat/do notes
 
 *Why:* Enables "what's on my list near Needham?" — both in the app and via Claude.
 
-### 4. Claude connector (remote MCP server)
+### 2. Claude connector (remote MCP server)
 Add and query notes from claude.ai (web, desktop, mobile) without opening the app.
 
 - [ ] `/api/mcp` route on the existing Vercel app

@@ -4,6 +4,12 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-25 — Smarter URL parsing
+
+- **Maps, YouTube, and Amazon links now produce real titles.** These sites return generic metadata ("Google Maps") to a server fetch. `/api/parse-url` now follows redirects and runs site extractors (`src/lib/urlExtractors.ts`): Maps name + address from the place URL path, YouTube title + channel via oEmbed, Amazon product name from the URL slug. Generic titles are detected and ignored.
+- **Shared text as context.** Text the Android share sheet sends alongside a link is passed to the classifier, which can now also name the thing and suggest a location.
+- **`location` field convention.** Stored as `Town ST` (e.g. `Newton Centre MA`) — comma-free because the parser splits fields on commas. Editable in the review modal. Chose text over coordinates: readable, and enough for Claude to reason about "near X".
+
 ## 2026-09-25 — Android share target
 
 - **SnapList in the Android share sheet.** The app was "another place to go"; now any app's Share → SnapList opens it with the link. The manifest registers a GET `share_target` on `/`; `SnapList` reads `title`/`text`/`url` once at mount (apps often put the link inside `text`), opens the URL review flow, or pre-fills the input for plain-text shares. Params survive the sign-in screen and are cleared from the address bar afterward.

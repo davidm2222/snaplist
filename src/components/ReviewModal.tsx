@@ -8,6 +8,7 @@ import type { ParseUrlResponse } from '@/app/api/parse-url/route';
 
 interface ReviewModalProps {
   url: string;
+  sharedText?: string; // text the Android share sheet sent with the link
   onSave: (raw: string) => Promise<void>;
   onClose: () => void;
 }
@@ -25,13 +26,15 @@ function buildRawString(
 ): string {
   const parts = [`${shelf}: ${title}`];
   for (const [key, val] of Object.entries(fields)) {
-    if (val.trim()) parts.push(`${key}:${val.trim()}`);
+    // parseNote splits fields on commas, so strip them from values ("Newton Centre, MA")
+    const clean = val.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+    if (clean) parts.push(`${key}:${clean}`);
   }
   const tagStr = hashTags.filter(Boolean).map(t => `#${t.replace(/^#/, '')}`).join(' ');
   return [parts.join(', '), tagStr, url].filter(Boolean).join(' ');
 }
 
-export function ReviewModal({ url, onSave, onClose }: ReviewModalProps) {
+export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalProps) {
   const { getIdToken } = useAuth();
 
   const [status, setStatus] = useState<Status>('loading');
@@ -39,6 +42,9 @@ export function ReviewModal({ url, onSave, onClose }: ReviewModalProps) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [site, setSite] = useState('');
+  const [location, setLocation] = useState('');
+  // Fields the form doesn't edit (e.g. channel) pass through unchanged
+  const [otherFields, setOtherFields] = useState<Record<string, string>>({});
   const [hashTags, setHashTags] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -58,7 +64,7 @@ export function ReviewModal({ url, onSave, onClose }: ReviewModalProps) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ url }),
+          body: JSON.stringify({ url, sharedText }),
         });
 
         if (!res.ok) throw new Error(`API error ${res.status}`);
@@ -70,6 +76,10 @@ export function ReviewModal({ url, onSave, onClose }: ReviewModalProps) {
         setTitle(data.title || '');
         setAuthor(data.fields?.author || '');
         setSite(data.fields?.site || '');
+        setLocation(data.fields?.location || '');
+        setOtherFields(Object.fromEntries(
+          Object.entries(data.fields ?? {}).filter(([k]) => !['author', 'site', 'location'].includes(k))
+        ));
         setHashTags((data.hashtags ?? []).join(', '));
         setStatus('ready');
       } catch (err) {
@@ -83,7 +93,7 @@ export function ReviewModal({ url, onSave, onClose }: ReviewModalProps) {
 
     fetchParsed();
     return () => { cancelled = true; };
-  }, [url, getIdToken]);
+  }, [url, sharedText, getIdToken]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -91,7 +101,8 @@ export function ReviewModal({ url, onSave, onClose }: ReviewModalProps) {
 
     setIsSubmitting(true);
     try {
-      const fields: Record<string, string> = {};
+      const fields: Record<string, string> = { ...otherFields };
+      if (location.trim()) fields.location = location.trim();
       if (author.trim()) fields.author = author.trim();
       if (site.trim()) fields.site = site.trim();
 
@@ -191,6 +202,20 @@ export function ReviewModal({ url, onSave, onClose }: ReviewModalProps) {
                 onChange={(e) => setTitle(e.target.value)}
                 required
                 className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+              />
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Location <span className="text-zinc-400 font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Town ST"
+                className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
               />
             </div>
 

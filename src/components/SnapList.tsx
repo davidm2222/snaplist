@@ -288,6 +288,7 @@ export function SnapList() {
       {reviewingUrl && (
         <ReviewModal
           url={reviewingUrl}
+          sharedText={share?.url === reviewingUrl ? share.text : undefined}
           onSave={addNote}
           onClose={() => setReviewingUrl(null)}
         />
