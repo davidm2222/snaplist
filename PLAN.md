@@ -43,11 +43,12 @@ Target model — each layer has one job:
 | **Hashtags** | Free descriptors, any number | #ramen #datenight |
 | **Fields** | Structured data the app *uses* (`url`, `location`, `author`, `channel`) + free user labels | location: Newton MA |
 
-- [ ] Add explicit `shelf` field and `updatedAt`; normalize `type`
-- [ ] One-time migration script: `tags[0]` → `shelf` + `type`; dry-run preview before writing
+- [x] Add explicit `shelf` field and `updatedAt`; normalize `type`
+- [x] One-time migration script: `tags[0]` → `shelf` + `type`; dry-run preview before writing (applied 2026-09-26 to all 119 notes; `tags` left in place)
+- [ ] App reads `shelf`; new notes write `shelf` + `updatedAt`
 - [ ] One write path: `saveNote(draft)` takes a structured note. The parser only converts typed text → draft. ReviewModal builds a draft directly (no rebuild-a-string-and-reparse), EditModal uses the same path.
-- [ ] Decide `raw`: keep as "original input" (excluded from search) or drop
-- [ ] Remove legacy maps and comma workarounds once migrated
+- [ ] `raw`: decided keep as "original input" — never updated after create, excluded from search
+- [ ] After a few days of normal use: remove `tags` field (script) and legacy resolution; then delete the service account key
 
 ### F4. Error handling & small UX fixes
 - [ ] Toast component; surface failures from add / review save / delete / `useNotes.error` (all currently console-only)
@@ -100,5 +101,4 @@ Add and query notes from claude.ai (web, desktop, mobile) without opening the ap
 - NL input: explicit sparkle button, auto-detect unstructured input, or both?
 - MCP auth: is a secret-URL token acceptable long-term for a personal app?
 - Location: store coordinates, or is a town name enough?
-- `raw`: keep original input for reference, or drop it after F3?
 - Sharing with others: any social layer, or does that violate the anti-bloat principle?
