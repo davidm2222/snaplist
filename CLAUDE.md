@@ -8,9 +8,10 @@ Personal capture app: one text box → structured note on a shelf (read/watch/ea
 pnpm dev     # local dev at :3000
 pnpm build   # type-check + production build — run before committing code changes
 pnpm lint
+pnpm test    # Vitest unit tests (src/**/*.test.ts)
 ```
 
-No test suite yet. Verify parser changes by hand: add a note and check the resulting card.
+Parser and URL extractors have unit tests — add a test with every parser change.
 
 ## Architecture
 
