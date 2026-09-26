@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-25 — Fix leading comma in notes
+
+- Notes after a `key:value` field started with ", " because removing the field left its comma behind. Parser now drops empty comma segments; cards clean up old saved notes at display time rather than migrating.
+
 ## 2026-09-25 — Smarter URL parsing
 
 - **Maps, YouTube, and Amazon links now produce real titles.** These sites return generic metadata ("Google Maps") to a server fetch. `/api/parse-url` now follows redirects and runs site extractors (`src/lib/urlExtractors.ts`): Maps name + address from the place URL path, YouTube title + channel via oEmbed, Amazon product name from the URL slug. Generic titles are detected and ignored.

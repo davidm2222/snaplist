@@ -108,7 +108,8 @@ export function parseNote(raw: string): ParsedNote {
     title,
     fields,
     hashTags,
-    notes: notes.replace(/,\s*$/, '').trim(),
+    // Removing fields leaves orphan commas (", , great omakase") — drop empty segments
+    notes: notes.split(',').map(p => p.trim()).filter(Boolean).join(', '),
     tags: [category]
   };
 }

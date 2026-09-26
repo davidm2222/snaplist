@@ -25,6 +25,11 @@ const LEGACY_CATEGORY_MAP: Record<string, string> = {
   restaurant: 'eat', drink: 'eat', activity: 'do',
 };
 
+// Notes saved before the parser fix can carry orphan commas (", , great omakase")
+function cleanNotes(notes: string | undefined): string {
+  return (notes ?? '').split(',').map(p => p.trim()).filter(Boolean).join(', ');
+}
+
 function resolveCategory(note: Note): string {
   const tag = note.tags?.[0];
   if (!tag) return 'other';
@@ -190,9 +195,9 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
         )}
 
         {/* Notes text */}
-        {note.notes && (
+        {cleanNotes(note.notes) && (
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3 leading-relaxed">
-            {note.notes}
+            {cleanNotes(note.notes)}
           </p>
         )}
 
