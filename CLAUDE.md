@@ -25,6 +25,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 | File | Role |
 |------|------|
 | `src/lib/parseNote.ts` | Text → note parser (shelf, title, fields, hashtags, URL, type) |
+| `src/lib/notes.ts` | Shared shelf/type/search logic (`SHELVES`, `SHELF_TYPES`, `lookupAlias`, `resolveShelf`, `resolveType`, `matchesSearch`) — use these, don't re-implement in components |
 | `src/types/index.ts` | `Note` type and `CATEGORIES` (shelves + aliases) — add aliases here |
 | `src/hooks/useNotes.tsx` | Firestore CRUD + realtime subscription, scoped by `userId` |
 | `src/hooks/useAuth.tsx` | Google sign-in context |
@@ -41,7 +42,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 
 ## Data model gotchas
 
-- **Shelf is stored as `tags[0]`**, not a dedicated field. Old notes have pre-shelf tags (`book`, `movie`, `drink`, …); these are resolved at read time by a `LEGACY_CATEGORY_MAP`. No migration was ever run — keep that working. ⚠ The map is duplicated in `SnapList.tsx`, `NoteCard.tsx`, and `EditModal.tsx`; change all three (or consolidate).
+- **Shelf is stored as `tags[0]`**, not a dedicated field. Old notes have pre-shelf tags (`book`, `movie`, `drink`, …); these are resolved at read time by `resolveShelf()` in `src/lib/notes.ts` (via the alias list). No migration was ever run — keep that working.
 - **`type`** preserves the input alias (`book`, `article`) so cards can say "Book" instead of "Read". Optional; absent on older notes.
 - **`fields`** is a free-form `Record<string,string>`. `fields.url` is special (rendered as a link, hidden from the chip row). `fields.location` is `Town ST` text, auto-filled by URL parsing. Everything else is a free-form user label.
 - **Field values can't contain commas** — notes are saved as a raw string and re-parsed, and `parseNote` splits fields on commas. `ReviewModal` strips them.
