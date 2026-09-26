@@ -6,6 +6,7 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ## 2026-09-26 — F4: small fixes
 
+- Auth and notes loading state is derived instead of reset inside effects (fixes the two lint errors). Notes are tagged with their owner uid, so a previous account's notes can't flash after switching.
 - Titles show exactly as typed. Cards used CSS `capitalize`, which turned "iPhone" into "IPhone".
 
 ## 2026-09-26 — F3: one save path

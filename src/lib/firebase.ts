@@ -12,14 +12,14 @@ const firebaseConfig = {
 };
 
 // Check if we have valid config
-const hasValidConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
+export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
 // Only initialize Firebase on the client side and when config is available
-if (typeof window !== 'undefined' && hasValidConfig) {
+if (typeof window !== 'undefined' && isFirebaseConfigured) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
   auth = getAuth(app);
   db = getFirestore(app);

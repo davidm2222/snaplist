@@ -35,21 +35,22 @@ function toFirestore(draft: NoteDraft) {
 
 export function useNotes() {
   const { user } = useAuth();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Result of the listener, tagged with the uid it belongs to so a stale
+  // result (signed out, or a different account) is never shown.
+  const [result, setResult] = useState<{ uid: string; notes: Note[]; error: string | null } | null>(null);
+  const current = user && result?.uid === user.uid ? result : null;
+  const notes = current?.notes ?? [];
+  const error = current?.error ?? null;
+  const loading = Boolean(user && db && !current);
 
   // Real-time listener for notes
   useEffect(() => {
-    if (!user || !db) {
-      setNotes([]);
-      setLoading(false);
-      return;
-    }
+    if (!user || !db) return;
+    const uid = user.uid;
 
     const q = query(
       collection(db, 'notes'),
-      where('userId', '==', user.uid),
+      where('userId', '==', uid),
       orderBy('timestamp', 'desc')
     );
 
@@ -60,13 +61,11 @@ export function useNotes() {
         snapshot.forEach((doc) => {
           notesData.push({ id: doc.id, ...doc.data() } as Note);
         });
-        setNotes(notesData);
-        setLoading(false);
+        setResult({ uid, notes: notesData, error: null });
       },
       (err) => {
         console.error('Error fetching notes:', err);
-        setError(err.message);
-        setLoading(false);
+        setResult((prev) => ({ uid, notes: prev?.uid === uid ? prev.notes : [], error: err.message }));
       }
     );
 

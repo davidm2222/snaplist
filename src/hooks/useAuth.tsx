@@ -8,7 +8,7 @@ import {
   signOut as firebaseSignOut,
   User as FirebaseUser
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -25,16 +25,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authResolved, setAuthResolved] = useState(false);
+  // Without Firebase config there's nothing to wait for
+  const loading = isFirebaseConfigured && !authResolved;
   const [error, setError] = useState<string | null>(null);
   const firebaseUserRef = useRef<FirebaseUser | null>(null);
 
   useEffect(() => {
-    // If auth is not initialized (no Firebase config), stop loading
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
+    if (!auth) return;
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       firebaseUserRef.current = firebaseUser;
@@ -46,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
       }
-      setLoading(false);
+      setAuthResolved(true);
     });
 
     return () => unsubscribe();
