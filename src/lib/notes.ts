@@ -8,23 +8,19 @@ export function isShelf(value: unknown): value is CategoryKey {
   return typeof value === 'string' && (SHELVES as string[]).includes(value);
 }
 
-// Curated types offered per shelf in the edit picker
-export const SHELF_TYPES: Record<CategoryKey, string[]> = {
-  read: ['book', 'article', 'link'],
-  watch: ['movie', 'show', 'video'],
-  eat: ['restaurant', 'cafe', 'bar', 'drink'],
-  do: ['activity', 'event', 'concert', 'hike', 'museum'],
-  buy: [],
-  other: [],
-};
+// Canonical types per shelf, in picker order
+export const SHELF_TYPES = Object.fromEntries(
+  SHELVES.map(shelf => [shelf, Object.keys(CATEGORIES[shelf].types)])
+) as Record<CategoryKey, string[]>;
 
-// Resolve a typed prefix ("book", "Movie", "eat") to its shelf.
-// type is the alias itself when it differs from the shelf key.
+// Resolve a typed prefix ("eat", "Book", "film") to its shelf and canonical type
 export function lookupAlias(word: string): { shelf: CategoryKey; type?: string } | null {
   const w = word.trim().toLowerCase();
   for (const shelf of SHELVES) {
-    if (CATEGORIES[shelf].aliases.includes(w)) {
-      return { shelf, type: w !== shelf ? w : undefined };
+    const { aliases, types } = CATEGORIES[shelf];
+    if (aliases.includes(w)) return { shelf };
+    for (const [type, synonyms] of Object.entries(types)) {
+      if (w === type || synonyms.includes(w)) return { shelf, type };
     }
   }
   return null;
@@ -39,12 +35,13 @@ export function resolveShelf(note: Pick<Note, 'tags'>): CategoryKey {
   return lookupAlias(tag)?.shelf ?? 'other';
 }
 
-// Specific type label ("book", "cafe"), or null when only the shelf is known
+// Canonical type ("book", "cafe"), or null when only the shelf is known.
+// Older notes may store a synonym ("film") or keep the type in tags[0]; both normalize.
 export function resolveType(note: Pick<Note, 'tags' | 'type'>): string | null {
-  if (note.type) return note.type;
   const tag = note.tags?.[0];
-  if (tag && !isShelf(tag)) return tag; // legacy note: tags[0] is the old category
-  return null;
+  const raw = note.type || (tag && !isShelf(tag) ? tag : null);
+  if (!raw) return null;
+  return lookupAlias(raw)?.type ?? raw;
 }
 
 // Every whitespace-separated term must appear somewhere in the note

@@ -4,6 +4,12 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-25 — Foundations F2: tests, shared notes module, one type list
+
+- **Vitest + 54 unit tests** for the parser, URL extractors, and shelf/type logic. Written first as characterization tests so the refactor couldn't silently change behavior.
+- **`src/lib/notes.ts`** now owns shelf/type/search logic. Removed 4 copies of the shelf list, 3 copies of the legacy map, and two unused (one buggy) hook functions — 144 lines gone.
+- **One type list.** `CATEGORIES` defines each shelf's types and their synonyms; the parser and the edit picker both read it. Synonyms store the main type (`film:` → movie, `beer:` → drink) so the same thing isn't labeled three ways. Older notes normalize at display time.
+
 ## 2026-09-25 — Security: rules in repo + API allowlist
 
 - Reviewed live Firestore rules: already owner-only (not test mode). Tightened updates so a note can't be reassigned to another `userId`, and committed them as `firestore.rules` so they're versioned.

@@ -26,7 +26,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 |------|------|
 | `src/lib/parseNote.ts` | Text → note parser (shelf, title, fields, hashtags, URL, type) |
 | `src/lib/notes.ts` | Shared shelf/type/search logic (`SHELVES`, `SHELF_TYPES`, `lookupAlias`, `resolveShelf`, `resolveType`, `matchesSearch`) — use these, don't re-implement in components |
-| `src/types/index.ts` | `Note` type and `CATEGORIES` (shelves + aliases) — add aliases here |
+| `src/types/index.ts` | `Note` type and `CATEGORIES` — shelves, types, and synonyms; add new prefixes here |
 | `src/hooks/useNotes.tsx` | Firestore CRUD + realtime subscription, scoped by `userId` |
 | `src/hooks/useAuth.tsx` | Google sign-in context |
 | `src/lib/firebase.ts` | Firebase init (client only; no-ops if env vars missing) |

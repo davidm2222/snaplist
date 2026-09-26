@@ -15,6 +15,19 @@ describe('parseNote — shelf and type', () => {
     expect(r.type).toBe('book');
   });
 
+  it('stores the canonical type for synonyms', () => {
+    expect(parseNote('film: Dune')).toMatchObject({ category: 'watch', type: 'movie' });
+    expect(parseNote('tv: Severance')).toMatchObject({ category: 'watch', type: 'show' });
+    expect(parseNote('beer: Heady Topper')).toMatchObject({ category: 'eat', type: 'drink' });
+    expect(parseNote('books: Dune')).toMatchObject({ category: 'read', type: 'book' });
+  });
+
+  it('files shelf aliases with no type', () => {
+    const r = parseNote('food: Tacos');
+    expect(r.category).toBe('eat');
+    expect(r.type).toBeUndefined();
+  });
+
   it('is case-insensitive on the prefix', () => {
     expect(parseNote('Movie: Dune').category).toBe('watch');
   });

@@ -25,13 +25,13 @@ From a full code review on 2026-09-25. The app works, but its data model grew by
 - [x] **Firestore rules:** review the live rules (Firebase console → Firestore → Rules). If in test mode, anyone with the project ID can read/write every note. Target: a user can only read/write docs where `userId == request.auth.uid`, and can't change `userId`.
 - [x] Commit rules to the repo (`firestore.rules`) so they're versioned and reviewable
 - [x] **API allowlist:** any Google account can sign in and call `/api/parse-url` (spends Anthropic credit, server fetches arbitrary URLs). Add `ALLOWED_UIDS` env var checked after token verification.
-- [ ] Publish tightened rules in Firebase console; set `ALLOWED_UIDS` in Vercel + `.env.local`
+- [x] Publish tightened rules in Firebase console; set `ALLOWED_UIDS` in Vercel + `.env.local`
 
 ### F2. Shared notes module + parser tests
-- [ ] `src/lib/notes.ts` — single source for the shelf list, type list per shelf, legacy shelf resolution, search. Replaces ~8 duplicated snippets (shelf set ×4, `LEGACY_CATEGORY_MAP` ×3, resolve functions ×3, search ×2).
-- [ ] Unify `TYPE_OPTIONS` (EditModal) with aliases in `CATEGORIES`
-- [ ] Delete unused `getNotesByCategory` (also buggy for legacy tags) and `searchNotes` in `useNotes`
-- [ ] Add Vitest; unit tests for `parseNote` (fields, commas, URLs, aliases, hashtags) and `urlExtractors`
+- [x] `src/lib/notes.ts` — single source for the shelf list, type list per shelf, legacy shelf resolution, search. Replaces ~8 duplicated snippets (shelf set ×4, `LEGACY_CATEGORY_MAP` ×3, resolve functions ×3, search ×2).
+- [x] Unify `TYPE_OPTIONS` (EditModal) with aliases in `CATEGORIES`
+- [x] Delete unused `getNotesByCategory` (also buggy for legacy tags) and `searchNotes` in `useNotes`
+- [x] Add Vitest; unit tests for `parseNote` (fields, commas, URLs, aliases, hashtags) and `urlExtractors`
 
 ### F3. Data model migration + single save path
 Target model — each layer has one job:
@@ -53,7 +53,7 @@ Target model — each layer has one job:
 - [ ] Toast component; surface failures from add / review save / delete / `useNotes.error` (all currently console-only)
 - [ ] Delete: replace `window.confirm` with an Undo toast
 - [ ] Compact card uses CSS `capitalize` on titles — "iPhone" renders "IPhone"
-- [ ] Fix pre-existing lint error: `useNotes.tsx` sets state synchronously in an effect
+- [ ] Fix pre-existing lint errors: `useNotes.tsx` and `useAuth.tsx` set state synchronously in an effect
 - [ ] Remove `/import` page (one-time Supabase import, done) and unused Geist Mono font
 
 *Scalability note:* loading all notes via a realtime listener is fine into the thousands; Firestore cost is negligible. Real risk only appears if the app opens to other users — which F1 covers.

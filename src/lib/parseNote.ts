@@ -3,7 +3,7 @@ import { lookupAlias } from './notes';
 
 interface ParsedNote {
   category: CategoryKey;
-  type?: string; // Original input alias (e.g. "book", "article") when it differs from the shelf key
+  type?: string; // Canonical type from the prefix ("film:" → "movie"); absent when the prefix is a shelf alias
   title: string;
   fields: Record<string, string>;
   hashTags: string[];

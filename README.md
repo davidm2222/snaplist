@@ -22,16 +22,16 @@ https://www.theatlantic.com/...        ← bare URL: AI fills in the rest
 
 ## Shelves
 
-| Shelf | Example aliases |
-|-------|-----------------|
+| Shelf | Types (and synonyms you can type) |
+|-------|------------------------------------|
 | Read  | book, article, link |
-| Watch | movie, show, tv, video, youtube |
-| Eat   | restaurant, cafe, bar, drink, beer, wine |
-| Do    | activity, event, hike, concert, museum |
-| Buy   | shop, shopping, want |
+| Watch | movie (film), show (tv, series), video (youtube) |
+| Eat   | restaurant, cafe, bar, drink (beer, wine, cocktail) — or `food:` for no type |
+| Do    | activity, event (festival, theater), concert (gig), hike (trail), museum (gallery) |
+| Buy   | (no types) — `buy:`, `shop:`, `want:` |
 | Other | (fallback) |
 
-Full alias list: `CATEGORIES` in `src/types/index.ts`.
+Typing a synonym stores the main type: `film: Dune` → Watch · Movie. Full list: `CATEGORIES` in `src/types/index.ts`.
 
 ## Features
 

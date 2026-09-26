@@ -19,17 +19,42 @@ export type CategoryKey = 'read' | 'watch' | 'eat' | 'do' | 'buy' | 'other';
 
 export interface Category {
   name: string;
-  aliases: string[];
+  aliases: string[];               // prefixes that file to this shelf with no specific type
+  types: Record<string, string[]>; // canonical type → synonyms that also select it
 }
 
+// Single source for shelves, types, and the prefixes the parser accepts.
+// Typing a synonym ("film:") stores the canonical type ("movie").
 export const CATEGORIES: Record<CategoryKey | 'all', Category> = {
-  all: { name: 'All', aliases: [] },
-  read: { name: 'Read', aliases: ['read', 'book', 'books', 'article', 'articles', 'link', 'links'] },
-  watch: { name: 'Watch', aliases: ['watch', 'movie', 'movies', 'film', 'films', 'show', 'shows', 'tv', 'series', 'youtube', 'video', 'videos'] },
-  eat: { name: 'Eat', aliases: ['eat', 'restaurant', 'restaurants', 'drink', 'drinks', 'beer', 'wine', 'cocktail', 'cafe', 'bar', 'food'] },
-  do: { name: 'Do', aliases: ['do', 'activity', 'activities', 'event', 'events', 'hike', 'hiking', 'trail', 'concert', 'gig', 'festival', 'museum', 'gallery', 'theater', 'theatre'] },
-  buy: { name: 'Buy', aliases: ['buy', 'shop', 'shopping', 'want'] },
-  other: { name: 'Other', aliases: [] },
+  all: { name: 'All', aliases: [], types: {} },
+  read: {
+    name: 'Read',
+    aliases: ['read'],
+    types: { book: ['books'], article: ['articles'], link: ['links'] },
+  },
+  watch: {
+    name: 'Watch',
+    aliases: ['watch'],
+    types: { movie: ['movies', 'film', 'films'], show: ['shows', 'tv', 'series'], video: ['videos', 'youtube'] },
+  },
+  eat: {
+    name: 'Eat',
+    aliases: ['eat', 'food'],
+    types: { restaurant: ['restaurants'], cafe: [], bar: [], drink: ['drinks', 'beer', 'wine', 'cocktail'] },
+  },
+  do: {
+    name: 'Do',
+    aliases: ['do'],
+    types: {
+      activity: ['activities'],
+      event: ['events', 'festival', 'theater', 'theatre'],
+      concert: ['gig'],
+      hike: ['hiking', 'trail'],
+      museum: ['gallery'],
+    },
+  },
+  buy: { name: 'Buy', aliases: ['buy', 'shop', 'shopping', 'want'], types: {} },
+  other: { name: 'Other', aliases: [], types: {} },
 };
 
 // User type
