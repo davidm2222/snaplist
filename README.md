@@ -1,92 +1,77 @@
 # SnapList
 
-A personal capture app for saving things you want to experience, read, buy, or do. Type a quick note in natural text — SnapList parses it into a structured record automatically.
+A personal capture app for things you want to read, watch, eat, do, or buy. Type a quick note in one text box — SnapList parses it into a structured record and files it on the right shelf.
 
-## Note Format
+## Note format
 
 ```
-category: Title, key:value, key:value #hashtag
+shelf: Title, key:value, key:value #hashtag https://optional.url
 ```
 
-**Examples:**
 ```
-book: The Hobbit, author:Tolkien #fantasy
-restaurant: Nobu, city:NYC #sushi
-movie: Dune #scifi
-drink: Negroni, bar:Attaboy #cocktail
-activity: Natural History Museum #museum
-show: Severance #thriller #apple
+read: The Hobbit, author:Tolkien #fantasy
+eat: Nobu, city:NYC #sushi
+watch: Severance #thriller
+buy: Aeron chair https://hermanmiller.com
+https://www.theatlantic.com/...        ← bare URL: AI fills in the rest
 ```
 
-If no category prefix is given, the note is saved as **Other**.
+- The prefix can be a shelf name or an alias (`book` → Read, `movie` → Watch, `restaurant` → Eat, …). No prefix → Other.
+- `key:value` pairs become fields; `#word` becomes a hashtag; a URL is stored as a link.
+- Pasting a bare URL opens a review screen pre-filled by AI (title, shelf, hashtags).
 
-## Categories
+## Shelves
 
-| Category | Aliases |
-|----------|---------|
-| Books | book, books |
-| Movies | movie, movies, film, films |
-| Shows | show, shows, tv, series |
-| Restaurants | restaurant, restaurants |
-| Drinks | drink, drinks (subtypes: beer, wine, cocktail) |
-| Activities | activity, activities, event (subtypes: hike, concert, museum, theater) |
+| Shelf | Example aliases |
+|-------|-----------------|
+| Read  | book, article, link |
+| Watch | movie, show, tv, video, youtube |
+| Eat   | restaurant, cafe, bar, drink, beer, wine |
+| Do    | activity, event, hike, concert, museum |
+| Buy   | shop, shopping, want |
 | Other | (fallback) |
+
+Full alias list: `CATEGORIES` in `src/types/index.ts`.
 
 ## Features
 
-- **Fast capture** — single text input, no forms
-- **Auto-parsing** — extracts category, title, key:value fields, and #hashtags
-- **Category tabs** — filter by type with per-tab counts
-- **Global search** — searches across title, notes, fields, and hashtags
-- **Compact / expanded view** — toggle between dense list and card view
-- **Edit modal** — fix category or text after saving
-- **Dark mode** — full system dark mode support
-- **Import** — upload a Supabase JSON export at `/import`
+- One-box capture with live parse preview
+- AI-assisted URL capture (Claude Haiku via a server route)
+- Shelf tabs with counts, global search, compact/expanded views
+- Mark done → collapsible "Completed" section
+- Edit modal (shelf, type, text)
+- Installable PWA, dark mode
+- `/import` — one-time import from the old Supabase JSON export
 
 ## Stack
 
-- **Next.js 16** (App Router)
-- **Firebase** — Auth (Google) + Firestore
-- **Tailwind CSS v4**
-- **TypeScript**
-- **pnpm**
+Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Firebase Auth (Google) + Firestore · Anthropic API · pnpm · hosted on Vercel
 
 ## Setup
 
-1. Clone the repo and install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-2. Create `.env.local` with your Firebase config:
-   ```
-   NEXT_PUBLIC_FIREBASE_API_KEY=
-   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-   NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-   NEXT_PUBLIC_FIREBASE_APP_ID=
-   ```
-
-3. Start the dev server:
-   ```bash
-   pnpm dev
-   ```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-## Build & Deploy
-
 ```bash
-pnpm build   # production build
-pnpm start   # run production server
+pnpm install
+cp .env.local.example .env.local   # then fill in values
+pnpm dev                           # http://localhost:3000
 ```
 
-Currently hosted on GitHub Pages. Planned migration to Vercel to enable API routes (required for upcoming AI-powered URL parsing).
+Environment variables:
 
-## Roadmap
+| Variable | Where used |
+|----------|-----------|
+| `NEXT_PUBLIC_FIREBASE_*` (6 vars) | Client Firebase config |
+| `FIREBASE_API_KEY` | Server — verifies Firebase ID tokens in API routes |
+| `ANTHROPIC_API_KEY` | Server — AI URL parsing |
 
-See [PLAN.md](./PLAN.md) for the full feature roadmap including:
-- URL & article support (read-later, shopping links)
-- AI-powered URL parsing (paste a link → auto-categorize)
-- Vercel migration
+Server-only vars have no `NEXT_PUBLIC_` prefix so they never reach the browser.
+
+## Deploy
+
+Pushing to `master` deploys to Vercel. Set the same env vars in the Vercel project settings.
+
+## Docs
+
+- [PLAN.md](./PLAN.md) — what's next
+- [CHANGELOG.md](./CHANGELOG.md) — what shipped and why
+- [UX-SPEC.md](./UX-SPEC.md) — product problem, goals, flows, decisions
+- [CLAUDE.md](./CLAUDE.md) — architecture and conventions for AI-assisted development
