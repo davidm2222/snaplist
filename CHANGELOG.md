@@ -10,6 +10,7 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 - **`#tag` and `@place` end the title**, like a comma. Before, `sichuan gourmet #spicy food was great` put "food was great" into the title.
 - **Location on cards:** a map pin and the capitalized place ("Chestnut Hill") instead of a generic `location:` chip, on compact and expanded cards.
 - **`@` autocomplete** suggests places you've used, most-used first. Format hint now shows `#tag @place`.
+- **Filter and sort:** Type and Place dropdowns (with counts) plus Newest / A–Z sort, in the row with the view toggle. Type is per shelf and resets on tab change; Place carries across tabs, so "everything near Needham" works on All.
 - **Locations are standardized:** saves drop a trailing home state ("Needham MA" → "Needham"), matching how most notes were already typed. Helpers treat `newton` / `Newton MA` as one place and capitalize for display.
 
 ## 2026-09-26 — F4: small fixes

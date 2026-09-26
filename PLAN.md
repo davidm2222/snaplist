@@ -79,7 +79,7 @@ Build:
 - [x] Location display on cards (like `url`) instead of a generic chip
 - [x] `@` autocomplete from known places
 - [x] Auto-fill drops home state
-- [ ] Filter by location in the UI (alongside type filter within a shelf, and sort options: newest / A–Z)
+- [x] Filter by location in the UI (alongside type filter within a shelf, and sort options: newest / A–Z)
 - [ ] Optional: backfill / clean existing locations (`Newton MA` → `newton`)
 
 *Why:* Enables "what's on my list near Needham?" — both in the app and via Claude.

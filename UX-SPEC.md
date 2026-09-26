@@ -114,12 +114,12 @@ One place, one input, zero setup per item. Type the way you'd jot something on p
 The structured text input is central to the product's identity. The format is designed to be learnable in one example, not require memorization.
 
 ```
-category: Title, key:value, key:value #hashtag https://url
+category: Title #hashtag @place, notes, key:value https://url
 ```
 
 **Examples:**
 ```
-eat: Nobu, city:NYC #sushi #datenight
+eat: Nobu @nyc #sushi #datenight
 read: The Pragmatic Programmer, author:Hunt #engineering
 watch: Severance #thriller #apple
 buy: Aeron chair https://herman-miller.com
@@ -128,9 +128,10 @@ read: https://www.theatlantic.com/...        ← AI fills in the rest
 
 **Parsing rules:**
 - First token before `:` is the category (or alias — `book` → read, `movie` → watch, etc.)
-- Everything after `:` up to the first `,` or `#` or URL is the title
+- Everything after `:` up to the first `,`, `#`, `@`, or URL is the title (hashtags placed before the title are skipped)
 - `key:value` pairs separated by commas become structured fields
 - `#word` tokens become hashtags
+- `@place` sets `fields.location`: the longest place already in use (`@chestnut hill`), otherwise one word. A trailing home state (MA) is dropped on save.
 - A bare `https://` URL is extracted into `fields.url` and stripped from the title
 - Anything that doesn't fit a field or hashtag pattern becomes freeform `notes`
 - If a bare URL is the entire input, AI parsing is triggered instead

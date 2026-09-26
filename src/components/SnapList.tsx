@@ -13,9 +13,10 @@ import { NoteCard } from './NoteCard';
 import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
 import { ReviewModal } from './ReviewModal';
+import { FilterBar, FilterOption, SortOrder } from './FilterBar';
 import { CategoryIcon, SearchIcon, ListIcon, CardIcon, CheckCircleIcon, ChevronDownIcon } from './Icons';
 import { isBareUrl, parseNote } from '@/lib/parseNote';
-import { resolveShelf, matchesSearch, knownLocations } from '@/lib/notes';
+import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation } from '@/lib/notes';
 
 // Android share target (see manifest.ts) opens /?title=&text=&url=.
 // Apps often put the link inside `text` rather than `url`.
@@ -34,6 +35,9 @@ export function SnapList() {
   const { notes, loading: notesLoading, error: notesError, addNote, saveNote, setDone, deleteNote, restoreNote } = useNotes();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<CategoryKey | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [placeFilter, setPlaceFilter] = useState(''); // a locationKey
+  const [sort, setSort] = useState<SortOrder>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   // Read once at mount; the modal/input only render after sign-in, and this state survives the auth screen
@@ -62,25 +66,62 @@ export function SnapList() {
     return counts;
   }, [notes]);
 
-  // Filter notes - search is GLOBAL, category filter only applies when not searching
-  const { activeNotes, doneNotes } = useMemo(() => {
-    let filtered = notes;
+  // Filter notes. Search is GLOBAL; the tab only applies when not searching.
+  // Type/place options come from the tab (or search) results, counting active notes.
+  const { activeNotes, doneNotes, baseCount, typeOptions, placeOptions } = useMemo(() => {
+    const base = searchQuery.trim()
+      ? notes.filter(note => matchesSearch(note, searchQuery))
+      : activeTab === 'all' ? notes : notes.filter(note => resolveShelf(note) === activeTab);
 
-    // If searching, search ALL notes globally (ignore category tab)
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(note => matchesSearch(note, searchQuery));
-    } else {
-      // No search query - filter by category tab
-      if (activeTab !== 'all') {
-        filtered = filtered.filter(note => resolveShelf(note) === activeTab);
+    const typeCounts = new Map<string, number>();
+    const placeCounts = new Map<string, number>();
+    for (const note of base) {
+      if (note.done) continue;
+      const type = resolveType(note);
+      if (type) typeCounts.set(type, (typeCounts.get(type) ?? 0) + 1);
+      if (note.fields.location) {
+        const key = locationKey(note.fields.location);
+        placeCounts.set(key, (placeCounts.get(key) ?? 0) + 1);
       }
+    }
+    // Keep the current selection listed even when this view has none of it
+    if (typeFilter && !typeCounts.has(typeFilter)) typeCounts.set(typeFilter, 0);
+    if (placeFilter && !placeCounts.has(placeFilter)) placeCounts.set(placeFilter, 0);
+    const toOptions = (counts: Map<string, number>, label: (v: string) => string): FilterOption[] =>
+      [...counts.entries()]
+        .map(([value, count]) => ({ value, label: label(value), count }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+    let filtered = base;
+    if (typeFilter) filtered = filtered.filter(note => resolveType(note) === typeFilter);
+    if (placeFilter) {
+      filtered = filtered.filter(note => note.fields.location && locationKey(note.fields.location) === placeFilter);
+    }
+    // Notes arrive newest first from Firestore
+    if (sort === 'az') {
+      filtered = [...filtered].sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
     }
 
     return {
       activeNotes: filtered.filter(n => !n.done),
       doneNotes: filtered.filter(n => n.done),
+      baseCount: base.length,
+      typeOptions: toOptions(typeCounts, v => v.charAt(0).toUpperCase() + v.slice(1)),
+      placeOptions: toOptions(placeCounts, formatLocation),
     };
-  }, [notes, activeTab, searchQuery]);
+  }, [notes, activeTab, searchQuery, typeFilter, placeFilter, sort]);
+
+  const filtersActive = !!(typeFilter || placeFilter);
+  const clearFilters = () => {
+    setTypeFilter('');
+    setPlaceFilter('');
+  };
+
+  // Types belong to a shelf, so switching tabs clears the type filter. Place carries over.
+  const handleTabChange = (tab: CategoryKey | 'all') => {
+    setActiveTab(tab);
+    setTypeFilter('');
+  };
 
   const handleToggleDone = async (id: string, done: boolean) => {
     try {
@@ -170,7 +211,7 @@ export function SnapList() {
           />
           <CategoryTabs
             activeTab={searchQuery ? 'all' : activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
             noteCounts={noteCounts}
           />
           {searchQuery && (
@@ -180,9 +221,19 @@ export function SnapList() {
           )}
         </div>
 
-        {/* View toggle + Notes List */}
-        {(activeNotes.length > 0 || doneNotes.length > 0) && (
-          <div className="flex justify-end">
+        {/* Filters, sort, view toggle */}
+        {baseCount > 0 && (
+          <div className="flex items-center justify-between gap-2">
+            <FilterBar
+              types={activeTab === 'all' && !searchQuery ? [] : typeOptions}
+              places={placeOptions}
+              type={typeFilter}
+              place={placeFilter}
+              sort={sort}
+              onTypeChange={setTypeFilter}
+              onPlaceChange={setPlaceFilter}
+              onSortChange={setSort}
+            />
             <button
               onClick={() => setViewMode(viewMode === 'compact' ? 'expanded' : 'compact')}
               className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors px-2 py-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -207,12 +258,22 @@ export function SnapList() {
               )}
             </div>
             <p className="text-zinc-500 dark:text-zinc-400">
-              {searchQuery
+              {filtersActive
+                ? 'Nothing matches these filters'
+                : searchQuery
                 ? 'No notes match your search'
                 : activeTab === 'all'
                 ? 'No notes yet. Add your first one above!'
                 : `No ${CATEGORIES[activeTab].name.toLowerCase()} yet`}
             </p>
+            {filtersActive && (
+              <button
+                onClick={clearFilters}
+                className="mt-3 text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-2">
