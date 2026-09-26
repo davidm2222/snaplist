@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-25 — Fix edit Save doing nothing
+
+- Editing a note with no `type` sent `type: undefined`, which Firestore rejects; the error was only logged, so Save silently did nothing. `updateNote` now turns `undefined` into a field delete, and the edit modal shows an error if a save fails. Saving an edit also cleans orphan commas out of old notes.
+
 ## 2026-09-25 — Shelf-aware review fields + notes
 
 - The URL review screen always showed Author and Site — leftovers from when it was built for articles, meaningless for a restaurant. Fields now follow the shelf (Read → author, Watch → channel, Eat/Do → location) plus anything the parser filled in. Dropped Site: the card already shows the domain.

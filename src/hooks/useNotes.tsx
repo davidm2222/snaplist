@@ -11,6 +11,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  deleteField,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Note, CategoryKey } from '@/types';
@@ -90,7 +91,11 @@ export function useNotes() {
     if (!db) throw new Error('Database not initialized');
 
     try {
-      await updateDoc(doc(db, 'notes', id), updates);
+      // Firestore rejects undefined values; treat undefined as "remove this field"
+      const data = Object.fromEntries(
+        Object.entries(updates).map(([k, v]) => [k, v === undefined ? deleteField() : v])
+      );
+      await updateDoc(doc(db, 'notes', id), data);
     } catch (err) {
       console.error('Error updating note:', err);
       throw err;

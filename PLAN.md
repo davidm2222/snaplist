@@ -45,6 +45,8 @@ Add and query notes from claude.ai (web, desktop, mobile) without opening the ap
 
 - **Natural-language input** — sparkle button to AI-parse free-form text (not just URLs) into the review flow.
 - **Consolidate `LEGACY_CATEGORY_MAP`** — currently duplicated in `SnapList.tsx`, `NoteCard.tsx`, `EditModal.tsx`.
+- **Pre-existing lint error** — `useNotes.tsx` calls `setNotes([])` synchronously in an effect (`react-hooks/set-state-in-effect`).
+- **Edit doesn't update `raw`** — search includes `raw`, so edited notes can still match their old text.
 - **Parser tests** — small unit test suite for `parseNote` before it grows further.
 
 ## Ideas (unscoped)

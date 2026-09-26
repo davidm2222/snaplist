@@ -46,6 +46,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
   const [hashTags, setHashTags] = useState(note.hashTags.join(', '));
   const [notes, setNotes] = useState(note.notes);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const editableCategories = (Object.keys(CATEGORIES) as (CategoryKey | 'all')[]).filter(
     (k): k is CategoryKey => k !== 'all'
@@ -61,6 +62,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
+    setError('');
     try {
       const parsedHashTags = hashTags
         .split(',')
@@ -72,7 +74,8 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
         tags: [category],
         fields,
         hashTags: parsedHashTags,
-        notes,
+        // Also drops orphan commas saved by the old parser (", , great omakase")
+        notes: notes.split(',').map(p => p.trim()).filter(Boolean).join(', '),
         type: type || undefined,
       };
 
@@ -80,6 +83,7 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
       onClose();
     } catch (err) {
       console.error('Failed to save:', err);
+      setError("Couldn't save — please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -257,6 +261,10 @@ export function EditModal({ note, onSave, onClose }: EditModalProps) {
               className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 resize-none"
             />
           </div>
+
+          {error && (
+            <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
