@@ -18,10 +18,11 @@ async function main() {
   let routine = 0;
   for (const { doc, changes } of planned) {
     const data = doc.data();
-    const interesting = changes.type !== undefined || changes.shelf !== data.tags?.[0];
+    const interesting = changes.type !== undefined || changes.notes !== undefined || (changes.shelf !== undefined && changes.shelf !== data.tags?.[0]);
     if (!interesting) { routine++; continue; }
     const parts = [`shelf ${fmt(data.tags?.[0])} → ${fmt(changes.shelf ?? data.shelf)}`];
     if (changes.type !== undefined) parts.push(`type ${fmt(data.type)} → ${fmt(changes.type)}`);
+    if (changes.notes !== undefined) parts.push(`notes ${fmt(data.notes)} → ${fmt(changes.notes)}`);
     console.log(`${String(data.title).slice(0, 40).padEnd(40)}  ${parts.join('   ')}`);
   }
 

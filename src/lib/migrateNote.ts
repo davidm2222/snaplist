@@ -6,7 +6,7 @@ import { resolveShelf, resolveType } from './notes';
 // Field → new value; null means "delete this field"
 export type NoteChanges = Record<string, string | number | null>;
 
-type StoredNote = Pick<Note, 'tags' | 'type' | 'timestamp'> & { shelf?: string; updatedAt?: number };
+type StoredNote = Pick<Note, 'tags' | 'type' | 'timestamp'> & { shelf?: string; updatedAt?: number; notes?: string };
 
 export function planShelfMigration(note: StoredNote): NoteChanges {
   const changes: NoteChanges = {};
@@ -19,6 +19,12 @@ export function planShelfMigration(note: StoredNote): NoteChanges {
   if (!type && note.type !== undefined) changes.type = null;
 
   if (note.updatedAt === undefined) changes.updatedAt = note.timestamp;
+
+  // Orphan commas saved by the pre-fix parser (", , same owner as sweet basil")
+  if (note.notes) {
+    const clean = note.notes.split(',').map(p => p.trim()).filter(Boolean).join(', ');
+    if (clean !== note.notes) changes.notes = clean;
+  }
 
   return changes;
 }

@@ -16,6 +16,7 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 - Every note now has a `shelf` field, a canonical `type`, and `updatedAt`. Previously the shelf hid in `tags[0]`, and 81 of 119 notes still carried pre-redesign values (`movie`, `restaurant`, …) resolved at read time.
 - Done with local admin scripts (`pnpm backup`, `pnpm migrate:shelf`): backup → dry run reviewed → apply → verify zero remaining. `tags` left untouched so the change can be rolled back by reverting code.
 - `gift` became a Buy type; the 6 legacy gift notes moved from Other to Buy · Gift.
+- Follow-up run: backfilled 1 note saved by a cached old app version, and cleaned orphan commas out of 8 notes' text (", , fabulous falafel").
 
 ## 2026-09-25 — Foundations F2: tests, shared notes module, one type list
 

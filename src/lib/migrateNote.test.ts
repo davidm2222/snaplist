@@ -34,6 +34,11 @@ describe('planShelfMigration', () => {
     expect(planShelfMigration({ ...base, tags: [] })).toEqual({ shelf: 'other', updatedAt: 1000 });
   });
 
+  it('removes orphan commas from notes', () => {
+    expect(planShelfMigration({ ...base, tags: ['eat'], shelf: 'eat', updatedAt: 1, notes: ', , same owner' }))
+      .toEqual({ notes: 'same owner' });
+  });
+
   it('is idempotent — a migrated note needs no changes', () => {
     const migrated = { ...base, tags: ['book'], shelf: 'read', type: 'book', updatedAt: 1000 };
     expect(planShelfMigration(migrated)).toEqual({});
