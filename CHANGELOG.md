@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-26 — Shared links: paywalled sites
+
+- **Bot-blocked pages no longer become the title.** The Atlantic returned "Your access has been blocked"; the server now fetches with a browser user agent and treats block/interstitial titles as missing, so Haiku names the item from the URL instead.
+
 ## 2026-09-26 — Location as a first-class field
 
 - **`@place` shorthand:** `eat: sichuan gourmet @needham`. Matches places you've already used (so `@chestnut hill` works), otherwise one word.

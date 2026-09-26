@@ -10,14 +10,17 @@ export interface Extracted {
 // Titles that describe the site, not the thing — treat as missing
 const GENERIC_TITLES = new Set([
   'google maps', 'youtube', 'amazon.com', 'amazon', 'instagram', 'tiktok', 'facebook',
-  'x', 'twitter', 'just a moment...', 'access denied', 'robot check', 'attention required!',
+  'x', 'twitter',
 ]);
+
+// Bot-block / interstitial pages, often suffixed with the site name ("Please hold a moment… – The Atlantic")
+const BLOCK_PAGE = /^(just a moment|please hold a moment|access denied|your access has been blocked|robot check|attention required|are you a robot)/;
 
 export function isGenericTitle(title: string, siteName = ''): boolean {
   const t = title.trim().toLowerCase();
   if (!t) return true;
   if (siteName && t === siteName.trim().toLowerCase()) return true;
-  return GENERIC_TITLES.has(t) || /^amazon\.com\s*:?\s*$/.test(t);
+  return GENERIC_TITLES.has(t) || BLOCK_PAGE.test(t) || /^amazon\.com\s*:?\s*$/.test(t);
 }
 
 // Google Maps place URLs carry "Name, street, town, ST zip" in the path:

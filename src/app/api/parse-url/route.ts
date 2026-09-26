@@ -24,6 +24,9 @@ async function verifyFirebaseToken(idToken: string): Promise<string | null> {
   }
 }
 
+const BROWSER_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36';
+
 // Extract metadata from raw HTML using regex — no dependencies, instant, free.
 function extractMetadata(html: string, url: string) {
   const get = (...patterns: RegExp[]) => {
@@ -102,7 +105,8 @@ export async function POST(req: NextRequest) {
   let finalUrl = url;
   try {
     const pageRes = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SnapList/1.0)' },
+      // Browser-like UA: some publishers (The Atlantic) 403 anything that looks like a bot
+      headers: { 'User-Agent': BROWSER_UA },
       signal: AbortSignal.timeout(6000),
     });
     finalUrl = pageRes.url || url;

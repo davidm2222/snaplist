@@ -44,7 +44,10 @@ describe('extractAmazon', () => {
 });
 
 describe('isGenericTitle', () => {
-  it.each(['', 'Google Maps', 'YouTube', 'Amazon.com', 'Just a moment...'])('generic: %j', (t) =>
+  it.each([
+    '', 'Google Maps', 'YouTube', 'Amazon.com', 'Just a moment...',
+    'Please hold a moment… – The Atlantic', 'Your access has been blocked', 'Access Denied',
+  ])('generic: %j', (t) =>
     expect(isGenericTitle(t)).toBe(true)
   );
 
