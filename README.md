@@ -62,6 +62,7 @@ Environment variables:
 | `NEXT_PUBLIC_FIREBASE_*` (6 vars) | Client Firebase config |
 | `FIREBASE_API_KEY` | Server — verifies Firebase ID tokens in API routes |
 | `ANTHROPIC_API_KEY` | Server — AI URL parsing |
+| `ALLOWED_UIDS` | Server — comma-separated Firebase UIDs allowed to call API routes |
 
 Server-only vars have no `NEXT_PUBLIC_` prefix so they never reach the browser.
 

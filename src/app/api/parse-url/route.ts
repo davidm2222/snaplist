@@ -76,6 +76,10 @@ export async function POST(req: NextRequest) {
   const uid = await verifyFirebaseToken(idToken);
   if (!uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Any Google account can sign in; only allowlisted users may spend AI credit / trigger server fetches.
+  const allowed = (process.env.ALLOWED_UIDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!allowed.includes(uid)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   // 2. Validate input. sharedText is what the Android share sheet sent along with the link.
   let url: string;
   let sharedText = '';

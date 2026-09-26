@@ -15,7 +15,8 @@ No test suite yet. Verify parser changes by hand: add a note and check the resul
 ## Architecture
 
 - **Client-heavy Next.js 16 App Router.** The app is one client component tree (`SnapList.tsx`) that talks to Firestore directly via the Firebase JS SDK. There is no server data layer.
-- **Server routes only for secrets.** `src/app/api/*` exists to hold `ANTHROPIC_API_KEY`. Routes authenticate by verifying the client's Firebase ID token (`Authorization: Bearer <idToken>`) against the Firebase REST `accounts:lookup` endpoint — no `firebase-admin`, no service account.
+- **Server routes only for secrets.** `src/app/api/*` exists to hold `ANTHROPIC_API_KEY`. Routes authenticate by verifying the client's Firebase ID token (`Authorization: Bearer <idToken>`) against the Firebase REST `accounts:lookup` endpoint — no `firebase-admin`, no service account. After verification, the UID must be in `ALLOWED_UIDS` (any Google account can sign in).
+- **Firestore rules** live in `firestore.rules` (owner-only access). Not auto-deployed — paste into the Firebase console after changing.
 - **Hosting:** Vercel, auto-deploy on push to `master`.
 
 ### Key files

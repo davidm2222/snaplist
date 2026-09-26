@@ -22,9 +22,10 @@ Share target and smarter URL parsing shipped (see CHANGELOG). Remaining:
 From a full code review on 2026-09-25. The app works, but its data model grew by patching and the code works around it: the shelf hides in `tags[0]` with legacy values, there are three different save paths, and logic is duplicated across components. Most recent bugs (orphan commas, silent edit failure, stale `raw`) trace back to this. Do these in order.
 
 ### F1. Security
-- [ ] **Firestore rules:** review the live rules (Firebase console → Firestore → Rules). If in test mode, anyone with the project ID can read/write every note. Target: a user can only read/write docs where `userId == request.auth.uid`, and can't change `userId`.
-- [ ] Commit rules to the repo (`firestore.rules`) so they're versioned and reviewable
-- [ ] **API allowlist:** any Google account can sign in and call `/api/parse-url` (spends Anthropic credit, server fetches arbitrary URLs). Add `ALLOWED_UIDS` env var checked after token verification.
+- [x] **Firestore rules:** review the live rules (Firebase console → Firestore → Rules). If in test mode, anyone with the project ID can read/write every note. Target: a user can only read/write docs where `userId == request.auth.uid`, and can't change `userId`.
+- [x] Commit rules to the repo (`firestore.rules`) so they're versioned and reviewable
+- [x] **API allowlist:** any Google account can sign in and call `/api/parse-url` (spends Anthropic credit, server fetches arbitrary URLs). Add `ALLOWED_UIDS` env var checked after token verification.
+- [ ] Publish tightened rules in Firebase console; set `ALLOWED_UIDS` in Vercel + `.env.local`
 
 ### F2. Shared notes module + parser tests
 - [ ] `src/lib/notes.ts` — single source for the shelf list, type list per shelf, legacy shelf resolution, search. Replaces ~8 duplicated snippets (shelf set ×4, `LEGACY_CATEGORY_MAP` ×3, resolve functions ×3, search ×2).

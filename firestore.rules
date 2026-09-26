@@ -1,0 +1,17 @@
+// Source of truth for Firestore security rules.
+// Not auto-deployed: paste into Firebase console → Firestore → Rules → Publish after changing.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /notes/{noteId} {
+      function isOwner(data) {
+        return request.auth != null && request.auth.uid == data.userId;
+      }
+
+      allow read, delete: if isOwner(resource.data);
+      allow create: if isOwner(request.resource.data);
+      // Must own the note before and after — can't reassign it to another user
+      allow update: if isOwner(resource.data) && isOwner(request.resource.data);
+    }
+  }
+}

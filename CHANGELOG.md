@@ -4,6 +4,11 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-25 — Security: rules in repo + API allowlist
+
+- Reviewed live Firestore rules: already owner-only (not test mode). Tightened updates so a note can't be reassigned to another `userId`, and committed them as `firestore.rules` so they're versioned.
+- `/api/parse-url` now requires the caller's UID to be in `ALLOWED_UIDS`. Any Google account could sign in, and the route spends Anthropic credit and fetches arbitrary URLs server-side.
+
 ## 2026-09-25 — Fix edit Save doing nothing
 
 - Editing a note with no `type` sent `type: undefined`, which Firestore rejects; the error was only logged, so Save silently did nothing. `updateNote` now turns `undefined` into a field delete, and the edit modal shows an error if a save fails. Saving an edit also cleans orphan commas out of old notes.
