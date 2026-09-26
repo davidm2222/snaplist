@@ -35,13 +35,14 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 | `src/components/ReviewModal.tsx` | AI-assisted URL capture review |
 | `src/components/NoteCard.tsx` | Note display (compact + expanded) |
 | `src/components/EditModal.tsx` | Edit shelf / type / text |
+| `src/components/Toast.tsx` | `ToastProvider` + `useToast()` — one toast at a time, optional action (Undo) |
 | `src/app/api/parse-url/route.ts` | Follow redirects, fetch metadata (regex on `<head>`), run site extractors, Claude Haiku classification |
 | `src/lib/urlExtractors.ts` | Site-specific title/location extraction (Maps, Amazon, YouTube) + generic-title detection |
 | `src/app/manifest.ts` | PWA manifest |
 
 ## Data model
 
-- **One save path.** Every screen builds a `NoteDraft` (`src/types/index.ts`); `useNotes` saves it via `addNote(draft, raw)` / `saveNote(id, draft)` / `setDone`. `toFirestore()` in `useNotes` is the only place a draft becomes Firestore data, and `normalizeDraft()` does all cleanup. Don't write notes any other way.
+- **One save path.** Every screen builds a `NoteDraft` (`src/types/index.ts`); `useNotes` saves it via `addNote(draft, raw)` / `saveNote(id, draft)` / `setDone`. `toFirestore()` in `useNotes` is the only place a draft becomes Firestore data, and `normalizeDraft()` does all cleanup. Don't write notes any other way. (Exception: `restoreNote` writes a deleted note back verbatim for Undo.)
 - **`shelf`** is an explicit field on every note (F3 migration, 2026-09-26). `tags` is legacy — still written as `[shelf]` so a code rollback works; `resolveShelf()` falls back to it. Scheduled for removal (see PLAN).
 - **`type`** is the canonical type within the shelf (`book`, `cafe`); synonyms normalize (`film` → `movie`). Optional.
 - **`raw`** is the original input at creation (typed text, or the shared URL). Never updated, not searched.

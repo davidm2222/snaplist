@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -41,7 +42,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${sourceSerif.variable} font-sans antialiased`}
       >
         <AuthProvider>
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
       </body>
     </html>

@@ -6,6 +6,8 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ## 2026-09-26 — F4: small fixes
 
+- **Toasts.** Failures when adding, saving from review, marking done, deleting, or loading notes now show an error toast; before they only reached the browser console, so a failed save on the phone was invisible.
+- **Delete with Undo.** Delete happens immediately with a 5-second "Note deleted · Undo" toast, replacing the `window.confirm` popup. Undo writes the note back under its original id, so it returns unchanged.
 - Removed the one-time `/import` page (Supabase import is long done) and the unused Geist Mono font.
 - Auth and notes loading state is derived instead of reset inside effects (fixes the two lint errors). Notes are tagged with their owner uid, so a previous account's notes can't flash after switching.
 - Titles show exactly as typed. Cards used CSS `capitalize`, which turned "iPhone" into "IPhone".

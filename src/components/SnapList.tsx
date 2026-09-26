@@ -6,6 +6,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { CategoryKey, CATEGORIES, Note, NoteDraft } from '@/types';
 import { Header } from './Header';
 import { NoteInput } from './NoteInput';
+import { useToast } from './Toast';
 import { CategoryTabs } from './CategoryTabs';
 import { SearchBar } from './SearchBar';
 import { NoteCard } from './NoteCard';
@@ -30,7 +31,8 @@ function readShareParams(): { url: string | null; text: string } | null {
 
 export function SnapList() {
   const { user, loading: authLoading } = useAuth();
-  const { notes, loading: notesLoading, addNote, saveNote, setDone, deleteNote } = useNotes();
+  const { notes, loading: notesLoading, error: notesError, addNote, saveNote, setDone, deleteNote, restoreNote } = useNotes();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<CategoryKey | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -39,6 +41,10 @@ export function SnapList() {
   const [reviewingUrl, setReviewingUrl] = useState<string | null>(share?.url ?? null);
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
   const [showCompleted, setShowCompleted] = useState(false);
+
+  useEffect(() => {
+    if (notesError) toast({ tone: 'error', message: "Couldn't load notes. Try reloading." });
+  }, [notesError, toast]);
 
   // Drop share params from the address bar so a refresh doesn't re-trigger them
   useEffect(() => {
@@ -77,17 +83,37 @@ export function SnapList() {
   }, [notes, activeTab, searchQuery]);
 
   const handleToggleDone = async (id: string, done: boolean) => {
-    await setDone(id, done);
+    try {
+      await setDone(id, done);
+    } catch (err) {
+      console.error('Failed to update:', err);
+      toast({ tone: 'error', message: "Couldn't update note. Try again." });
+    }
   };
 
+  // Delete immediately; Undo writes the note back
   const handleDelete = async (id: string) => {
-    if (window.confirm('Delete this note?')) {
-      try {
-        await deleteNote(id);
-      } catch (err) {
-        console.error('Failed to delete:', err);
-      }
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+    try {
+      await deleteNote(id);
+    } catch (err) {
+      console.error('Failed to delete:', err);
+      toast({ tone: 'error', message: "Couldn't delete note. Try again." });
+      return;
     }
+    toast({
+      message: 'Note deleted',
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          restoreNote(note).catch((err) => {
+            console.error('Failed to restore:', err);
+            toast({ tone: 'error', message: "Couldn't restore note." });
+          });
+        },
+      },
+    });
   };
 
   const handleEdit = (note: Note) => {

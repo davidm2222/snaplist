@@ -3,6 +3,7 @@
 import { useState, FormEvent, useRef, useEffect, useMemo } from 'react';
 import { Note } from '@/types';
 import { isBareUrl } from '@/lib/parseNote';
+import { useToast } from './Toast';
 
 interface NoteInputProps {
   onSubmit: (raw: string) => Promise<void>;
@@ -12,6 +13,7 @@ interface NoteInputProps {
 }
 
 export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }: NoteInputProps) {
+  const toast = useToast();
   const [value, setValue] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestion, setSuggestion] = useState('');
@@ -135,6 +137,7 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
       setSuggestion('');
     } catch (err) {
       console.error('Failed to add note:', err);
+      toast({ tone: 'error', message: "Couldn't save note. Your text is still here, try again." });
     } finally {
       setIsSubmitting(false);
     }

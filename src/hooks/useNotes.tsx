@@ -10,6 +10,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  setDoc,
   doc,
   deleteField,
 } from 'firebase/firestore';
@@ -122,6 +123,16 @@ export function useNotes() {
     }
   }, [user]);
 
+  // Undo a delete: write the note back verbatim under its original id.
+  // Not a save — the data was already normalized when first written.
+  const restoreNote = useCallback(async (note: Note) => {
+    if (!user) throw new Error('Must be logged in');
+    if (!db) throw new Error('Database not initialized');
+
+    const { id, ...data } = note;
+    await setDoc(doc(db, 'notes', id), data);
+  }, [user]);
+
   return {
     notes,
     loading,
@@ -130,5 +141,6 @@ export function useNotes() {
     saveNote,
     setDone,
     deleteNote,
+    restoreNote,
   };
 }

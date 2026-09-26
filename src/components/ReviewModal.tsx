@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { CategoryKey, CATEGORIES, NoteDraft } from '@/types';
 import { CategoryIcon } from './Icons';
+import { useToast } from './Toast';
 import { SHELVES, isShelf } from '@/lib/notes';
 import { useAuth } from '@/hooks/useAuth';
 import type { ParseUrlResponse } from '@/app/api/parse-url/route';
@@ -34,6 +35,7 @@ const inputClass = 'w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 bor
 export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalProps) {
   const { getIdToken } = useAuth();
 
+  const toast = useToast();
   const [status, setStatus] = useState<Status>('loading');
   const [shelf, setShelf] = useState<CategoryKey>('other');
   const [title, setTitle] = useState('');
@@ -101,6 +103,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
       onClose();
     } catch (err) {
       console.error('Failed to save:', err);
+      toast({ tone: 'error', message: "Couldn't save note. Try again." });
     } finally {
       setIsSubmitting(false);
     }
