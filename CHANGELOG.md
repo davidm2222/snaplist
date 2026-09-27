@@ -4,6 +4,13 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-26 — Natural-language capture
+
+- **Type anything:** input without a shelf prefix goes to Haiku, then the review screen. "mike broshi told me to read the sun also rises" → Read / Book, *The Sun Also Rises*, author Ernest Hemingway, notes "Mike Broshi recommended". Prefixed input (`eat: …`) still saves instantly. *Why:* the syntax was the heaviest part of capture.
+- **Fills only what it knows:** author (Read), town and cuisine (Eat), town (Do). The prompt tells Haiku to leave a field blank rather than guess; who recommended it / who it's for goes in notes. If AI fails, the review screen is pre-filled by the regular parser.
+- **Cuisine** is now a field on Eat, for typed text and shared links.
+- Prompt and response cleanup live in `src/lib/aiParse.ts` with unit tests; tuned against real samples before shipping.
+
 ## 2026-09-26 — Shared links get a type
 
 - **Review screen has a Type picker** (Book / Article / Link on Read, Movie / Show / Video on Watch, …), pre-filled. Before, only typed prefixes (`book:`) set a type, so every shared link had none.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { extractFromUrl, isGenericTitle, pickType, type Extracted } from '@/lib/urlExtractors';
 import type { CategoryKey } from '@/types';
+import { buildTextPrompt, readAiDraft } from '@/lib/aiParse';
 import { SHELVES, SHELF_TYPES, isShelf, stripHomeState } from '@/lib/notes';
 
 async function verifyFirebaseToken(idToken: string): Promise<string | null> {
@@ -76,6 +77,27 @@ export interface ParseUrlResponse {
   title: string;
   fields: Record<string, string>;
   hashtags: string[];
+  notes?: string; // free-text input only
+}
+
+// Free-form text -> Haiku -> draft. Falls back to "other" with the text as title if the AI call fails.
+async function parseText(text: string): Promise<ParseUrlResponse> {
+  const fallback: ParseUrlResponse = { shelf: 'other', type: '', title: text, fields: {}, hashtags: [] };
+  try {
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const message = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      messages: [{ role: 'user', content: buildTextPrompt(text) }],
+    });
+    const reply = message.content[0]?.type === 'text' ? message.content[0].text : '';
+    const draft = readAiDraft(reply);
+    if (!draft) return fallback;
+    return { ...draft, title: draft.title || text };
+  } catch (err) {
+    console.error('Claude text parse error:', err);
+    return fallback;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -91,13 +113,22 @@ export async function POST(req: NextRequest) {
   const allowed = (process.env.ALLOWED_UIDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
   if (!allowed.includes(uid)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  // 2. Validate input. sharedText is what the Android share sheet sent along with the link.
-  let url: string;
+  // 2. Validate input: a url (sharedText is what the Android share sheet sent along with it),
+  // or free-form typed text.
+  let url = '';
   let sharedText = '';
   try {
     const body = await req.json();
-    url = body.url;
+    if (typeof body.url === 'string') url = body.url;
     if (typeof body.sharedText === 'string') sharedText = body.sharedText.slice(0, 1000);
+    if (!url && typeof body.text === 'string') {
+      const text = body.text.slice(0, 1000);
+      // Text that contains a link is a link with context; plain text has its own prompt.
+      const link = text.match(/https?:\/\/[^\s,]+/)?.[0];
+      if (!link) return NextResponse.json(await parseText(text));
+      url = link;
+      sharedText = text;
+    }
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
@@ -163,12 +194,13 @@ Shared text: ${sharedText || '(none)'}
 URL: ${finalUrl}
 
 Return ONLY valid JSON, no markdown:
-{"shelf":"<shelf>","type":"<type or empty>","hashtags":["<tag1>","<tag2>"],"title":"<name>","location":"<town>"}
+{"shelf":"<shelf>","type":"<type or empty>","hashtags":["<tag1>","<tag2>"],"title":"<name>","location":"<town>","cuisine":"<cuisine>"}
 
 Rules:
 - type: "" unless one of the shelf's types clearly fits (a news or magazine piece is an article; a book is a book).
 - 1-3 lowercase single-word hashtags describing the thing (e.g. cuisine, genre, topic).
 - title: short name of the specific thing (not the website's name). Keep the given Name if known.
+- cuisine: eat only, one or two lowercase words ("french bakery", "sichuan"); "" otherwise or if unsure.
 - location: the town, adding the state only if it is not Massachusetts (e.g. "Newton", "Cabot VT"); "" if the info above doesn't say where it is.`;
 
   let shelf: CategoryKey = 'other';
@@ -176,6 +208,7 @@ Rules:
   let hashtags: string[] = [];
   let aiTitle = '';
   let aiLocation = '';
+  let aiCuisine = '';
 
   try {
     const message = await anthropic.messages.create({
@@ -193,6 +226,7 @@ Rules:
       hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];
       aiTitle = typeof parsed.title === 'string' ? parsed.title.trim() : '';
       aiLocation = typeof parsed.location === 'string' ? parsed.location.trim() : '';
+      aiCuisine = typeof parsed.cuisine === 'string' ? parsed.cuisine.trim() : '';
     }
   } catch (err) {
     console.error('Claude classification error:', err);
@@ -202,6 +236,7 @@ Rules:
   const fields: Record<string, string> = { ...extracted?.fields };
   if (meta.author) fields.author = meta.author;
   if (!fields.location && aiLocation) fields.location = aiLocation;
+  if (shelf === 'eat' && aiCuisine) fields.cuisine = aiCuisine;
 
   if (fields.location) fields.location = stripHomeState(fields.location);
 

@@ -45,7 +45,8 @@ Add and query notes from claude.ai (web, desktop, mobile) without opening the ap
 
 ## Later
 
-- **Natural-language input** — sparkle button to AI-parse free-form text (not just URLs) into the review flow.
+- **Skip review for AI notes** — once natural-language capture is usually right, save directly with a "Saved to Read → Book · Edit" toast.
+- **Cuisine filter** — cuisine is now a field on Eat; add it as a dropdown next to Type / Place.
 
 ## Ideas (unscoped)
 
@@ -63,6 +64,6 @@ Add and query notes from claude.ai (web, desktop, mobile) without opening the ap
 
 ## Open questions
 
-- NL input: explicit sparkle button, auto-detect unstructured input, or both?
+- NL input trigger: auto-detect (no prefix → AI) shipped; switch to a sparkle button if it surprises.
 - MCP auth: is a secret-URL token acceptable long-term for a personal app?
 - Sharing with others: any social layer, or does that violate the anti-bloat principle?

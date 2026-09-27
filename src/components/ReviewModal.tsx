@@ -6,12 +6,15 @@ import { CategoryIcon } from './Icons';
 import { useToast } from './Toast';
 import { TypePicker } from './TypePicker';
 import { SHELVES, isShelf } from '@/lib/notes';
+import { parseNote } from '@/lib/parseNote';
 import { useAuth } from '@/hooks/useAuth';
 import type { ParseUrlResponse } from '@/app/api/parse-url/route';
 
+// Reviews either a link (shared or pasted) or free-form typed text; the server fills in the rest.
 interface ReviewModalProps {
-  url: string;
+  url?: string;
   sharedText?: string; // text the Android share sheet sent with the link
+  text?: string;       // typed input with no shelf prefix
   onSave: (draft: NoteDraft) => Promise<void>;
   onClose: () => void;
 }
@@ -22,8 +25,8 @@ type Status = 'loading' | 'ready' | 'error';
 // Fields worth offering per shelf; any other field the parser filled in is shown too
 const SHELF_FIELDS: Record<CategoryKey, string[]> = {
   read: ['author'],
-  watch: ['channel'],
-  eat: ['location'],
+  watch: [],
+  eat: ['location', 'cuisine'],
   do: ['location'],
   buy: [],
   other: [],
@@ -33,7 +36,7 @@ const FIELD_PLACEHOLDERS: Record<string, string> = { location: 'Town (+ state if
 
 const inputClass = 'w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-none text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400';
 
-export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalProps) {
+export function ReviewModal({ url, sharedText, text, onSave, onClose }: ReviewModalProps) {
   const { getIdToken } = useAuth();
 
   const toast = useToast();
@@ -63,7 +66,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ url, sharedText }),
+          body: JSON.stringify({ url, sharedText, text }),
         });
 
         if (!res.ok) throw new Error(`API error ${res.status}`);
@@ -76,19 +79,30 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
         setTitle(data.title || '');
         setFields(data.fields ?? {});
         setHashTags((data.hashtags ?? []).join(', '));
+        setNotes(data.notes ?? '');
         setStatus('ready');
       } catch (err) {
         if (cancelled) return;
         console.error('URL parse failed:', err);
-        // Fall through to manual entry with just the URL pre-filled.
-        setTitle(url);
+        // Fall through to manual entry: typed text gets the regular parser, a link just the URL.
+        if (text) {
+          const draft = parseNote(text);
+          setShelf(draft.shelf);
+          setType(draft.type ?? '');
+          setTitle(draft.title);
+          setNotes(draft.notes);
+          setFields(draft.fields);
+          setHashTags(draft.hashTags.join(', '));
+        } else {
+          setTitle(url ?? '');
+        }
         setStatus('error');
       }
     }
 
     fetchParsed();
     return () => { cancelled = true; };
-  }, [url, sharedText, getIdToken]);
+  }, [url, sharedText, text, getIdToken]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -101,7 +115,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
         type,
         title,
         notes,
-        fields: { ...fields, url },
+        fields: url ? { ...fields, url } : fields,
         hashTags: hashTags.split(','),
       });
       onClose();
@@ -123,14 +137,18 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
             <h2 className="text-lg font-semibold font-serif text-zinc-900 dark:text-zinc-100">
               Review & Save
             </h2>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-amber-500 truncate block max-w-xs"
-            >
-              {url.length > 50 ? url.slice(0, 50) + '…' : url}
-            </a>
+            {url ? (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-amber-500 truncate block max-w-xs"
+              >
+                {url.length > 50 ? url.slice(0, 50) + '…' : url}
+              </a>
+            ) : (
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 line-clamp-2 max-w-xs">{text}</p>
+            )}
           </div>
           <button
             type="button"
@@ -145,7 +163,7 @@ export function ReviewModal({ url, sharedText, onSave, onClose }: ReviewModalPro
         {status === 'loading' && (
           <div className="py-8 flex flex-col items-center gap-3">
             <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Analyzing URL…</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Analyzing…</p>
           </div>
         )}
 

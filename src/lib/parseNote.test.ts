@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseNote, isBareUrl } from './parseNote';
+import { parseNote, isBareUrl, hasKnownPrefix } from './parseNote';
 
 describe('parseNote — shelf and type', () => {
   it('uses the shelf name directly, with no type', () => {
@@ -199,4 +199,14 @@ describe('isBareUrl', () => {
     'read: My Article, https://example.com',
     'book: The Hobbit',
   ])('false for %s', (s) => expect(isBareUrl(s)).toBe(false));
+});
+
+describe('hasKnownPrefix', () => {
+  it.each(['eat: Nobu', 'Book: Dune', 'film: Heat', 'read:x'])('prefixed: %j', (t) =>
+    expect(hasKnownPrefix(t)).toBe(true)
+  );
+
+  it.each(['le petit four in wellesley', 'note: call mom', 'https://example.com', ': nothing'])('not prefixed: %j', (t) =>
+    expect(hasKnownPrefix(t)).toBe(false)
+  );
 });

@@ -32,12 +32,13 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 | `src/lib/firebase.ts` | Firebase init (client only; no-ops if env vars missing) |
 | `src/components/SnapList.tsx` | App shell: state, filtering (tab, search, type, place, sort), active/done split, layout |
 | `src/components/FilterBar.tsx` | Type / place / sort dropdowns (native `<select>`) |
-| `src/components/NoteInput.tsx` | Input with autocomplete (fields, `#tags`, `@places`); bare URL → review flow |
-| `src/components/ReviewModal.tsx` | AI-assisted URL capture review |
+| `src/components/NoteInput.tsx` | Input with autocomplete (fields, `#tags`, `@places`); prefixed text saves instantly, bare URL or unprefixed text → review flow |
+| `src/components/ReviewModal.tsx` | AI-assisted review for links and unprefixed text |
 | `src/components/NoteCard.tsx` | Note display (compact + expanded) |
 | `src/components/EditModal.tsx` | Edit shelf / type / text |
 | `src/components/Toast.tsx` | `ToastProvider` + `useToast()` — one toast at a time, optional action (Undo) |
 | `src/app/api/parse-url/route.ts` | Follow redirects, fetch metadata (regex on `<head>`), run site extractors, Claude Haiku classification |
+| `src/lib/aiParse.ts` | Free-text → Haiku prompt + reply cleanup (`AI_FIELDS` per shelf: author; location, cuisine). Unprefixed input uses this |
 | `src/lib/urlExtractors.ts` | Site-specific title/location extraction (Maps, Amazon, YouTube) + generic-title detection |
 | `src/app/manifest.ts` | PWA manifest |
 

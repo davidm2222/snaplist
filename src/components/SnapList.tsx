@@ -15,7 +15,7 @@ import { EditModal } from './EditModal';
 import { ReviewModal } from './ReviewModal';
 import { FilterBar, FilterOption, SortOrder } from './FilterBar';
 import { CategoryIcon, SearchIcon, ListIcon, CardIcon, CheckCircleIcon, ChevronDownIcon } from './Icons';
-import { isBareUrl, parseNote } from '@/lib/parseNote';
+import { hasKnownPrefix, isBareUrl, parseNote } from '@/lib/parseNote';
 import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation } from '@/lib/notes';
 
 // Android share target (see manifest.ts) opens /?title=&text=&url=.
@@ -42,7 +42,10 @@ export function SnapList() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   // Read once at mount; the modal/input only render after sign-in, and this state survives the auth screen
   const [share] = useState(readShareParams);
-  const [reviewingUrl, setReviewingUrl] = useState<string | null>(share?.url ?? null);
+  // What the review screen is showing: a link, or typed text without a shelf prefix
+  const [reviewing, setReviewing] = useState<{ url?: string; text?: string } | null>(
+    share?.url ? { url: share.url } : null
+  );
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -170,9 +173,14 @@ export function SnapList() {
     if (isBareUrl(trimmed)) {
       const urlMatch = trimmed.match(/https?:\/\/[^\s]+/);
       if (urlMatch) {
-        setReviewingUrl(urlMatch[0]);
+        setReviewing({ url: urlMatch[0] });
         return;
       }
+    }
+    // A shelf prefix ("eat:") saves instantly; anything else gets AI help on the review screen.
+    if (!hasKnownPrefix(trimmed)) {
+      setReviewing({ text: trimmed });
+      return;
     }
     await addNote(parseNote(trimmed, knownLocations(notes)), trimmed);
   };
@@ -340,13 +348,14 @@ export function SnapList() {
         />
       )}
 
-      {/* URL Review Modal */}
-      {reviewingUrl && (
+      {/* Review Modal: links and free-form text */}
+      {reviewing && (
         <ReviewModal
-          url={reviewingUrl}
-          sharedText={share?.url === reviewingUrl ? share.text : undefined}
-          onSave={(draft) => addNote(draft, reviewingUrl)}
-          onClose={() => setReviewingUrl(null)}
+          url={reviewing.url}
+          text={reviewing.text}
+          sharedText={reviewing.url && share?.url === reviewing.url ? share.text : undefined}
+          onSave={(draft) => addNote(draft, reviewing.url ?? reviewing.text ?? '')}
+          onClose={() => setReviewing(null)}
         />
       )}
     </div>

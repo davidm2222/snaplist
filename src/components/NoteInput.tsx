@@ -2,7 +2,7 @@
 
 import { useState, FormEvent, useRef, useEffect, useMemo } from 'react';
 import { Note } from '@/types';
-import { isBareUrl } from '@/lib/parseNote';
+import { hasKnownPrefix, isBareUrl } from '@/lib/parseNote';
 import { knownLocations } from '@/lib/notes';
 import { useToast } from './Toast';
 
@@ -158,6 +158,9 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
     }
   };
 
+  // No shelf prefix (or a bare link) -> AI fills in the review screen instead of saving instantly
+  const needsReview = !!value.trim() && (isBareUrl(value) || !hasKnownPrefix(value.trim()));
+
   return (
     <form onSubmit={handleSubmit} className="w-full">
       <div className="relative">
@@ -177,7 +180,7 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled || isSubmitting}
-          placeholder="eat: Nobu @nyc #sushi  —  book: The Martian #scifi  —  watch: Severance"
+          placeholder="le petit four in wellesley, best croissants  —  or eat: Nobu @nyc #sushi"
           className="w-full px-4 py-3 pr-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all text-base"
         />
         <button
@@ -185,7 +188,7 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
           disabled={!value.trim() || disabled || isSubmitting}
           className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-900 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
         >
-          {isSubmitting ? '...' : isBareUrl(value) ? 'Review & Save' : 'Add'}
+          {isSubmitting ? '...' : needsReview ? 'Review & Save' : 'Add'}
         </button>
       </div>
       {suggestion ? (
@@ -197,6 +200,10 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
           {suggestion.slice(value.length)}
           <span className="text-amber-400 dark:text-amber-500 hidden sm:inline">Tab</span>
         </button>
+      ) : needsReview && !isBareUrl(value) ? (
+        <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
+          AI will fill in the details. Start with <span className="font-mono text-zinc-500 dark:text-zinc-400">eat:</span>, <span className="font-mono text-zinc-500 dark:text-zinc-400">read:</span>… to save instantly.
+        </p>
       ) : (
         <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
           Format: <span className="font-mono text-zinc-500 dark:text-zinc-400">category: Title #tag @place, notes, key:value</span>

@@ -77,6 +77,12 @@ One place, one input, zero setup per item. Type the way you'd jot something on p
 4. Submit → note appears at the top of the list, filed under the right shelf
 5. Input clears and is ready for the next capture
 
+### Natural-Language Capture (AI-Assisted Flow)
+1. Type anything without a shelf prefix: `le petit four in wellesley, they have the best croissants`
+2. A hint under the input says AI will fill in the details (prefix to save instantly)
+3. Submit → Haiku fills shelf, type, title, notes (who recommended it, who it's for), and details it knows for certain (author; town and cuisine for eat) → review screen
+4. User edits if needed, then saves. If AI fails, the review screen opens pre-filled by the regular parser.
+
 ### URL Capture (AI-Assisted Flow)
 1. Copy a URL elsewhere → open app → paste into input
 2. App detects bare URL → triggers AI review instead of direct save
@@ -161,8 +167,8 @@ Originally the app had type-based tabs: Books, Movies, Restaurants, etc. As usag
 **Hashtags for granularity, not subtypes**
 Rather than `read > books > fiction`, hashtags like `#fiction` handle granularity without nesting or proliferating tabs. The user decides what metadata matters.
 
-**AI parsing for URLs, not all input**
-Running AI on every note would add latency and cost to the core capture flow. Structured input is instant and free. AI is reserved for URLs where the value is clear: you pasted a link, the AI fetches the page and saves you the typing. Best of both worlds.
+**AI for links and unprefixed text; the prefix is the fast path**
+Structured input (`eat: Nobu`) stays instant and free. Anything without a known prefix goes through Haiku to the review screen (2026-09-26), since plain text otherwise gives nothing to organize with. AI fills details only when certain; a blank beats a wrong answer, and the review screen catches mistakes. Revisit: if AI is usually right, save directly with an Edit toast instead of reviewing; if auto-detect surprises, switch to an explicit sparkle button.
 
 **Done/archive over delete**
 Deleting feels permanent and discourages capturing anything time-sensitive. A "done" state lets you clear the active list while keeping a record — true long-term memory behavior.
@@ -174,7 +180,6 @@ Single sign-in with no password to manage. Firestore gives real-time sync across
 
 ## Open Questions
 
-- **NL input:** Should a "sparkle" button allow free-form text (not just URLs) to be AI-parsed? Keeps the structured path fast while offering an escape hatch.
 - **Completed export:** Should done items be separately exportable (e.g., "books I've read this year")?
 - **Progress states:** Should Read/Watch items support richer status (in progress, abandoned) beyond binary done/not-done?
 - **Sharing:** If opened to others, does any social layer (shared lists, recommendations) make sense, or does that violate the anti-bloat principle?

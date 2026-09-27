@@ -86,6 +86,12 @@ function extractFields(text: string): { fields: Record<string, string>; cleanTex
 // Triggers the AI review flow instead of direct save.
 // Examples that match: "https://example.com", "read: https://...", "https://... #news #tech"
 // Examples that don't: "read: My Article, https://...", "book: The Hobbit"
+// True when input starts with a shelf or type prefix ("eat:", "film:"). Anything else goes to AI review.
+export function hasKnownPrefix(input: string): boolean {
+  const colon = input.indexOf(':');
+  return colon > 0 && lookupAlias(input.slice(0, colon)) !== null;
+}
+
 export function isBareUrl(input: string): boolean {
   return /^([a-zA-Z]+:\s*)?https?:\/\/[^\s]+(\s+#[a-zA-Z0-9_]+)*\s*$/.test(input.trim());
 }
