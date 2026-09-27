@@ -30,6 +30,8 @@ function readShareParams(): { url: string | null; text: string } | null {
   return { url, text: [title, text].filter(Boolean).join(' ') };
 }
 
+const resultsLabel = (n: number) => `${n} ${n === 1 ? 'result' : 'results'}`;
+
 export function SnapList() {
   const { user, loading: authLoading } = useAuth();
   const { notes, loading: notesLoading, error: notesError, addNote, saveNote, setDone, deleteNote, restoreNote } = useNotes();
@@ -204,45 +206,40 @@ export function SnapList() {
 
   return (
     <div className="min-h-screen bg-background" data-shelf={searchQuery ? 'all' : activeTab}>
-      <Header />
-
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-        {/* Input with autocomplete */}
-        <NoteInput onSubmit={handleNoteSubmit} disabled={notesLoading} notes={notes} initialValue={share && !share.url ? share.text : ''} />
-
-        {/* Search and Tabs */}
-        <div className="space-y-3">
+      {/* Sticky top: app bar, search, shelves */}
+      <div className="sticky top-0 z-40 bg-background/90 backdrop-blur-lg">
+        <div className="max-w-3xl mx-auto px-4 pt-4 pb-3 space-y-3">
+          <Header />
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search all notes..."
+            placeholder="Search everything"
           />
           <CategoryTabs
             activeTab={searchQuery ? 'all' : activeTab}
             onTabChange={handleTabChange}
             noteCounts={noteCounts}
           />
-          {searchQuery && (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Searching across all categories
-            </p>
-          )}
         </div>
+      </div>
 
-        {/* Filters, sort, view toggle */}
+      <main className="max-w-3xl mx-auto px-4 pt-1 pb-8 space-y-3">
+        {/* Input with autocomplete (moves behind a + button in R3) */}
+        <NoteInput onSubmit={handleNoteSubmit} disabled={notesLoading} notes={notes} initialValue={share && !share.url ? share.text : ''} />
+
         {baseCount > 0 && (
-          <div className="flex items-center justify-between gap-2">
-            <FilterBar
-              types={activeTab === 'all' && !searchQuery ? [] : typeOptions}
-              places={placeOptions}
-              type={typeFilter}
-              place={placeFilter}
-              sort={sort}
-              onTypeChange={setTypeFilter}
-              onPlaceChange={setPlaceFilter}
-              onSortChange={setSort}
-            />
-          </div>
+          <FilterBar
+            types={activeTab === 'all' && !searchQuery ? [] : typeOptions}
+            places={placeOptions}
+            type={typeFilter}
+            place={placeFilter}
+            sort={sort}
+            onTypeChange={setTypeFilter}
+            onPlaceChange={setPlaceFilter}
+            onSortChange={setSort}
+            onClear={clearFilters}
+            status={searchQuery.trim() ? resultsLabel(activeNotes.length + doneNotes.length) : undefined}
+          />
         )}
         {notesLoading ? (
           <div className="text-center py-12">

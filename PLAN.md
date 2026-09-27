@@ -11,8 +11,7 @@ Future work only. Shipped work moves to [CHANGELOG.md](./CHANGELOG.md).
 ### Browse-first redesign
 Mockup (agreed 2026-09-27): https://claude.ai/artifact/75Jeky6r8doTDjqzj8JDum (the "Dots" phone). The app is mostly for finding things, so the list gets the screen and capture moves behind a button. One commit per step:
 
-- [ ] **R2 Layout:** sticky header with search + shelf tabs only; type / place / sort move behind one Filter button (badge shows active count; options stay dynamic per shelf); inline input removed.
-- [ ] **R3 Add panel:** floating + opens a bottom sheet with a multi-line box, autocomplete pills, and Add / Review & Save (unchanged logic). Enter = new line. Android shared text opens the same sheet.
+- [ ] **R3 Add panel:** remove the inline input; floating + opens a bottom sheet with a multi-line box, autocomplete pills, and Add / Review & Save (unchanged logic). Enter = new line. Android shared text opens the same sheet.
 - [ ] **R4 Been / Finished:** replace "Done" with a per-shelf label. Eat "Been here", Do "Did it": item stays in the list with a check by the place. Read "Read it", Watch "Watched", Buy "Bought": moves to a collapsed "Finished" section. Eat/Do filter gains Been: All / Not yet / Been. Same `done` field, no migration.
 - [ ] **R5 Group by place:** Eat and Do get a "By place" sort that shows place headings with counts.
 

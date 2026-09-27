@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-27 — Browse-first layout (redesign R2)
+
+- App bar, search, and shelf tabs share one sticky header, so they stay reachable while scrolling. Type / place / sort moved behind a single Filter button with a count badge; while searching, the right side shows the result count. *Why:* three dropdowns took space even when unused, and the list should get the screen.
+
 ## 2026-09-27 — New look (redesign R1)
 
 - Source Serif 4 titles with Source Sans 3 text, set larger (18px titles, 15–16px details, taller rows). Each shelf has a color that tints the active tab and the wordmark; a small colored dot on each row replaces the left accent bar. Rows show just title · place (or type) · link; the age moved into the expanded view. *Why:* the old look felt cramped, small, and generic.

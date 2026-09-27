@@ -31,7 +31,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 | `src/hooks/useAuth.tsx` | Google sign-in context |
 | `src/lib/firebase.ts` | Firebase init (client only; no-ops if env vars missing) |
 | `src/components/SnapList.tsx` | App shell: state, filtering (tab, search, type, place, sort), active/done split, layout |
-| `src/components/FilterBar.tsx` | Type / place / sort dropdowns (native `<select>`) |
+| `src/components/FilterBar.tsx` | Filter button + panel: type / place / sort (native `<select>`), badge shows active count |
 | `src/components/NoteInput.tsx` | Input with autocomplete (fields, `#tags`, `@places`); prefixed text saves instantly, bare URL or unprefixed text → review flow |
 | `src/components/ReviewModal.tsx` | AI-assisted review for links and unprefixed text |
 | `src/components/NoteCard.tsx` | Note display (compact + expanded) |
@@ -55,7 +55,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 ## Conventions
 
 - Start simple: no new dependencies or infrastructure without a stated reason.
-- Tailwind v4, zinc neutrals, amber accent, teal hashtags, Source Serif 4 for titles, SVG line icons in `Icons.tsx`. Every shelf has a color (`--read`, `--eat`… in `globals.css`, light + dark) used for row dots; the current shelf is `--shelf` (set via `data-shelf` on the app shell) and tints the active tab and wordmark. Source Serif 4 titles, Source Sans 3 body.
+- Tailwind v4, zinc neutrals, amber accent, teal hashtags, SVG line icons in `Icons.tsx`. Every shelf has a color (`--read`, `--eat`… in `globals.css`, light + dark) used for row dots; the current shelf is `--shelf` (set via `data-shelf` on the app shell) and tints the active tab and wordmark. Source Serif 4 titles, Source Sans 3 body.
 - AI calls use `claude-haiku-4-5-20251001` for cheap classification; keep prompts small and return JSON.
 - AI failures must degrade gracefully to manual entry — never block capture.
 

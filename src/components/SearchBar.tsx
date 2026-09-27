@@ -11,20 +11,21 @@ interface SearchBarProps {
 export function SearchBar({ value, onChange, placeholder = 'Search notes...' }: SearchBarProps) {
   return (
     <div className="relative w-full">
-      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+      <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-zinc-400" />
       <input
-        type="text"
+        type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-transparent text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:bg-white dark:focus:bg-zinc-800 transition-all text-sm"
+        className="w-full h-11 pl-10 pr-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-shelf focus:border-transparent transition-shadow text-base [&::-webkit-search-cancel-button]:hidden"
       />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+          aria-label="Clear search"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
         >
-          <XIcon className="w-4 h-4" />
+          <XIcon className="w-[18px] h-[18px]" />
         </button>
       )}
     </div>
