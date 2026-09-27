@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Source_Serif_4 } from "next/font/google";
+import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const sourceSans = Source_Sans_3({
+  variable: "--font-source-sans",
   subsets: ["latin"],
 });
 
@@ -39,7 +39,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="SnapList" />
       </head>
       <body
-        className={`${geistSans.variable} ${sourceSerif.variable} font-sans antialiased`}
+        className={`${sourceSans.variable} ${sourceSerif.variable} font-sans antialiased`}
       >
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>

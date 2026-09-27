@@ -6,10 +6,10 @@ export function Header() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-200 dark:border-zinc-800">
+    <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-lg border-b border-zinc-200 dark:border-zinc-800">
       <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold font-serif tracking-tight text-zinc-900 dark:text-amber-400">
+          <h1 className="text-[22px] font-semibold font-serif tracking-tight text-shelf transition-colors">
             SnapList
           </h1>
           <p className="text-xs text-zinc-400 dark:text-zinc-500 hidden sm:block">

@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-27 — New look (redesign R1)
+
+- Source Serif 4 titles with Source Sans 3 text, set larger (18px titles, 15–16px details, taller rows). Each shelf has a color that tints the active tab and the wordmark; a small colored dot on each row replaces the left accent bar. Rows show just title · place (or type) · link; the age moved into the expanded view. *Why:* the old look felt cramped, small, and generic.
+
 ## 2026-09-27 — Tap to expand
 
 - Notes are one-line rows; tapping one expands it in place (one at a time) with fields, tags, notes, and Done / Edit / Delete. The compact/expanded toggle is gone. *Why:* the app is mostly for finding things, and tapping a row used to open the edit screen.

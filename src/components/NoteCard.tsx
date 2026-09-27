@@ -2,7 +2,7 @@
 
 import { Note, CATEGORIES } from '@/types';
 import { resolveShelf, resolveType, formatLocation } from '@/lib/notes';
-import { CategoryIcon, EditIcon, TrashIcon, ExternalLinkIcon, CheckCircleIcon, MapPinIcon } from './Icons';
+import { EditIcon, TrashIcon, ExternalLinkIcon, CheckCircleIcon } from './Icons';
 
 function extractDomain(url: string): string {
   try {
@@ -26,24 +26,6 @@ function cleanNotes(notes: string | undefined): string {
   return (notes ?? '').split(',').map(p => p.trim()).filter(Boolean).join(', ');
 }
 
-const CATEGORY_ACCENT: Record<string, string> = {
-  read: 'border-l-amber-500 dark:border-l-amber-400',
-  watch: 'border-l-violet-500 dark:border-l-violet-400',
-  eat: 'border-l-orange-500 dark:border-l-orange-400',
-  do: 'border-l-emerald-500 dark:border-l-emerald-400',
-  buy: 'border-l-sky-500 dark:border-l-sky-400',
-  other: 'border-l-indigo-400 dark:border-l-indigo-500',
-};
-
-const CATEGORY_BADGE: Record<string, string> = {
-  read: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  watch: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
-  eat: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  do: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  buy: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-  other: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-};
-
 function formatRelativeTime(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
@@ -60,21 +42,19 @@ function formatRelativeTime(timestamp: number): string {
 
 export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onToggleExpand }: NoteCardProps) {
   const category = resolveShelf(note);
-  const categoryData = CATEGORIES[category];
-  const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other;
-  const badgeClass = CATEGORY_BADGE[category] || CATEGORY_BADGE.other;
   const displayType = resolveType(note);
-  const chipLabel = displayType
+  const typeLabel = displayType
     ? displayType.charAt(0).toUpperCase() + displayType.slice(1)
-    : categoryData.name;
+    : CATEGORIES[category].name;
+  const place = note.fields.location ? formatLocation(note.fields.location) : '';
   // url and location have their own display; the rest render as generic chips
   const otherFields = Object.entries(note.fields).filter(([key]) => key !== 'url' && key !== 'location');
-
   const notesText = cleanNotes(note.notes);
+  const shelfColor = { color: `var(--${category})` };
 
   return (
     <div
-      className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} transition-all ${expanded ? 'shadow-md' : 'hover:shadow-md'} ${note.done ? 'opacity-50' : ''}`}
+      className={`bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800 transition-shadow ${expanded ? 'shadow-lg shadow-black/5 dark:shadow-black/40' : ''} ${note.done ? 'opacity-50' : ''}`}
     >
       {/* Row: always visible, tap to expand */}
       <div
@@ -88,77 +68,57 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
             onToggleExpand?.();
           }
         }}
-        className="flex items-center gap-2 px-3 py-2 cursor-pointer"
+        className="flex items-center gap-3 px-3.5 py-3 min-h-[52px] cursor-pointer rounded-xl focus-visible:outline-2 focus-visible:outline-shelf"
       >
-        <CategoryIcon category={category} className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-        <span className={`font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 ${expanded ? '' : 'truncate'} ${note.done ? 'line-through' : ''}`}>
+        <span className="w-[9px] h-[9px] rounded-full shrink-0" style={{ backgroundColor: `var(--${category})` }} />
+        <span className={`flex-1 min-w-0 font-serif font-semibold text-lg leading-snug text-zinc-900 dark:text-zinc-50 ${expanded ? '' : 'truncate'} ${note.done ? 'line-through' : ''}`}>
           {note.title}
         </span>
-        <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${badgeClass}`}>
-          {chipLabel}
+        <span className="text-[15px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap shrink-0">
+          {place || typeLabel}
         </span>
-        {note.fields.location && (
-          <span className="inline-flex items-center gap-0.5 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
-            <MapPinIcon className="w-3 h-3" />
-            {formatLocation(note.fields.location)}
-          </span>
-        )}
-        {!expanded && note.hashTags.length > 0 && (
-          <span className="text-[11px] text-teal-500 dark:text-teal-400 truncate hidden sm:inline">
-            #{note.hashTags[0]}{note.hashTags.length > 1 && ` +${note.hashTags.length - 1}`}
-          </span>
-        )}
         {note.fields.url && (
           <a
             href={note.fields.url}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="ml-auto shrink-0 text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+            className="shrink-0 -m-1 p-1 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
             title={note.fields.url}
           >
-            <ExternalLinkIcon className="w-3.5 h-3.5" />
+            <ExternalLinkIcon className="w-[17px] h-[17px]" />
           </a>
         )}
-        <span className={`text-[11px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap tabular-nums shrink-0 ${note.fields.url ? '' : 'ml-auto'}`}>
-          {formatRelativeTime(note.timestamp)}
-        </span>
       </div>
 
       {/* Details: shown in place when expanded */}
       {expanded && (
-        <div className="px-3 pb-3 pl-8 space-y-2">
+        <div className="px-3.5 pb-3.5 pl-[34px] space-y-2.5">
           {note.fields.url && (
             <a
               href={note.fields.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              style={shelfColor}
+              className="inline-flex items-center gap-1.5 text-[15px] hover:underline"
             >
-              <ExternalLinkIcon className="w-3 h-3" />
+              <ExternalLinkIcon className="w-4 h-4" />
               {extractDomain(note.fields.url)}
             </a>
           )}
 
-          {otherFields.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {otherFields.map(([key, value]) => (
-                <span
-                  key={key}
-                  className="text-xs px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
-                >
-                  <span className="font-medium text-zinc-500 dark:text-zinc-400">{key}:</span> {value}
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-1.5">
+            <Chip label="type" value={typeLabel.toLowerCase()} />
+            {place && <Chip label="place" value={place} />}
+            {otherFields.map(([key, value]) => <Chip key={key} label={key} value={value} />)}
+          </div>
 
           {note.hashTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {note.hashTags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-xs px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium"
+                  className="text-[15px] px-2.5 py-0.5 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300"
                 >
                   #{tag}
                 </span>
@@ -167,36 +127,45 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
           )}
 
           {notesText && (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              {notesText}
-            </p>
+            <p className="text-base leading-relaxed text-zinc-700 dark:text-zinc-300">{notesText}</p>
           )}
 
-          <div className="flex gap-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+          <p className="text-sm text-zinc-400 dark:text-zinc-500">Added {formatRelativeTime(note.timestamp)}</p>
+
+          <div className="flex gap-2 pt-1">
             <button
               onClick={() => onToggleDone?.(note.id, !note.done)}
-              className={`flex items-center gap-1 text-xs transition-colors ${note.done ? 'text-emerald-500 hover:text-zinc-400 dark:hover:text-zinc-500' : 'text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
+              style={shelfColor}
+              className="flex items-center gap-1.5 text-[15px] font-medium px-3.5 py-1.5 rounded-lg border border-current transition-colors"
             >
-              <CheckCircleIcon className="w-3 h-3" />
+              <CheckCircleIcon className="w-4 h-4" />
               {note.done ? 'Restore' : 'Done'}
             </button>
             <button
               onClick={() => onEdit?.(note)}
-              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              className="flex items-center gap-1.5 text-[15px] font-medium px-3.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
-              <EditIcon className="w-3 h-3" />
+              <EditIcon className="w-4 h-4" />
               Edit
             </button>
             <button
               onClick={() => onDelete?.(note.id)}
-              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              className="ml-auto flex items-center gap-1.5 text-[15px] font-medium px-3 py-1.5 rounded-lg text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
             >
-              <TrashIcon className="w-3 h-3" />
+              <TrashIcon className="w-4 h-4" />
               Delete
             </button>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function Chip({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="text-[15px] px-2.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200">
+      <span className="font-semibold text-zinc-500 dark:text-zinc-400">{label}</span> {value}
+    </span>
   );
 }

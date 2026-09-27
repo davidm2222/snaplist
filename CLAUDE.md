@@ -55,7 +55,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 ## Conventions
 
 - Start simple: no new dependencies or infrastructure without a stated reason.
-- Tailwind v4, zinc neutrals, amber accent, teal hashtags, Source Serif 4 for titles, SVG line icons in `Icons.tsx`. Every shelf has a color used for the card's left accent bar — keep light and dark variants in sync.
+- Tailwind v4, zinc neutrals, amber accent, teal hashtags, Source Serif 4 for titles, SVG line icons in `Icons.tsx`. Every shelf has a color (`--read`, `--eat`… in `globals.css`, light + dark) used for row dots; the current shelf is `--shelf` (set via `data-shelf` on the app shell) and tints the active tab and wordmark. Source Serif 4 titles, Source Sans 3 body.
 - AI calls use `claude-haiku-4-5-20251001` for cheap classification; keep prompts small and return JSON.
 - AI failures must degrade gracefully to manual entry — never block capture.
 

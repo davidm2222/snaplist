@@ -1,21 +1,51 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #171717;
+  --background: #f6f6f7;
+  --foreground: #18181b;
+
+  /* Shelf colors: dots, active tab, wordmark. Keep light and dark in sync. */
+  --read: #b7700a;
+  --watch: #7254cf;
+  --eat: #cf5a22;
+  --do: #2a8f60;
+  --buy: #2a76c4;
+  --other: #5760c2;
+  --all: #3f3f46;
+  --on-shelf: #ffffff;
+  --shelf: var(--all);
 }
+
+/* The current shelf, set on the app shell via data-shelf */
+[data-shelf="read"] { --shelf: var(--read); }
+[data-shelf="watch"] { --shelf: var(--watch); }
+[data-shelf="eat"] { --shelf: var(--eat); }
+[data-shelf="do"] { --shelf: var(--do); }
+[data-shelf="buy"] { --shelf: var(--buy); }
+[data-shelf="other"] { --shelf: var(--other); }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-shelf: var(--shelf);
+  --color-on-shelf: var(--on-shelf);
+  --font-sans: var(--font-source-sans);
   --font-serif: var(--font-source-serif);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0b;
-    --foreground: #f0f0f0;
+    --background: #101012;
+    --foreground: #f0f0f2;
+
+    --read: #f0a83a;
+    --watch: #a790f2;
+    --eat: #f58a55;
+    --do: #5ccb95;
+    --buy: #6faeef;
+    --other: #9098ec;
+    --all: #d4d4d8;
+    --on-shelf: #121214;
   }
 }
 

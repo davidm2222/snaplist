@@ -1,7 +1,6 @@
 'use client';
 
 import { CATEGORIES, CategoryKey } from '@/types';
-import { CategoryIcon } from './Icons';
 import { SHELVES } from '@/lib/notes';
 
 interface CategoryTabsProps {
@@ -14,10 +13,9 @@ const TAB_ORDER: (CategoryKey | 'all')[] = ['all', ...SHELVES];
 
 export function CategoryTabs({ activeTab, onTabChange, noteCounts = {} }: CategoryTabsProps) {
   return (
-    <div className="w-full overflow-x-auto scrollbar-hide sm:overflow-x-visible">
-      <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl min-w-max sm:min-w-0 sm:flex-wrap">
+    <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1.5 min-w-max">
         {TAB_ORDER.map((key) => {
-          const category = CATEGORIES[key];
           const count = noteCounts[key] || 0;
           const isActive = activeTab === key;
 
@@ -25,23 +23,15 @@ export function CategoryTabs({ activeTab, onTabChange, noteCounts = {} }: Catego
             <button
               key={key}
               onClick={() => onTabChange(key)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              aria-pressed={isActive}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-medium transition-colors whitespace-nowrap ${
                 isActive
-                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  ? 'bg-shelf text-on-shelf'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/60 dark:hover:bg-zinc-800'
               }`}
             >
-              <CategoryIcon category={key} className={`w-4 h-4 ${isActive ? 'text-amber-600 dark:text-amber-400' : ''}`} />
-              <span className="hidden sm:inline">{category.name}</span>
-              {count > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                  isActive
-                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
-                    : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
-                }`}>
-                  {count}
-                </span>
-              )}
+              {CATEGORIES[key].name}
+              {count > 0 && <span className="text-sm tabular-nums opacity-70">{count}</span>}
             </button>
           );
         })}
