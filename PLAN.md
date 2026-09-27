@@ -8,16 +8,7 @@ Future work only. Shipped work moves to [CHANGELOG.md](./CHANGELOG.md).
 
 ## Now
 
-### Browse-first redesign
-Mockup (agreed 2026-09-27): https://claude.ai/artifact/75Jeky6r8doTDjqzj8JDum (the "Dots" phone). The app is mostly for finding things, so the list gets the screen and capture moves behind a button. One commit per step:
-
-- [ ] **R5 Group by place:** Eat and Do get a "By place" sort that shows place headings with counts.
-
-*Why:* the app felt utilitarian and cramped, the input took prime space, and "Done" made it feel like a task list when for restaurants and activities it's really "been there" metadata.
-
----
-
-## Verify capture on device
+### Verify capture on device
 Share target and smarter URL parsing shipped (see CHANGELOG). Remaining:
 
 - [x] Share target shows up and opens the review flow (confirmed 2026-09-25)

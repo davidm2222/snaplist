@@ -99,6 +99,22 @@ export function formatLocation(location: string): string {
 }
 
 // Distinct location keys in use, most frequent first — for @ autocomplete and parsing
+// "By place" view: biggest place first, ties alphabetical, notes without a place last.
+// Keeps the incoming order within each group.
+export function groupByPlace<T extends Pick<Note, 'fields'>>(notes: T[]): { key: string; label: string; notes: T[] }[] {
+  const groups = new Map<string, { key: string; label: string; notes: T[] }>();
+  const noPlace: T[] = [];
+  for (const note of notes) {
+    const loc = note.fields.location;
+    if (!loc) { noPlace.push(note); continue; }
+    const key = locationKey(loc);
+    if (!groups.has(key)) groups.set(key, { key, label: formatLocation(loc), notes: [] });
+    groups.get(key)!.notes.push(note);
+  }
+  const sorted = [...groups.values()].sort((a, b) => b.notes.length - a.notes.length || a.label.localeCompare(b.label));
+  return noPlace.length ? [...sorted, { key: '', label: 'No place', notes: noPlace }] : sorted;
+}
+
 export function knownLocations(notes: Pick<Note, 'fields'>[]): string[] {
   const counts = new Map<string, number>();
   for (const note of notes) {

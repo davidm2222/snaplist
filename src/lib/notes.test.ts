@@ -3,7 +3,7 @@ import type { Note } from '@/types';
 import { CATEGORIES } from '@/types';
 import {
   SHELVES, SHELF_TYPES, isShelf, lookupAlias, resolveShelf, resolveType, matchesSearch, normalizeDraft,
-  stripHomeState, locationKey, formatLocation, knownLocations, DONE_LABELS, isFinished,
+  stripHomeState, locationKey, formatLocation, knownLocations, DONE_LABELS, isFinished, groupByPlace,
 } from './notes';
 
 const note = (over: Partial<Note>): Note => ({
@@ -215,5 +215,27 @@ describe('isFinished', () => {
 describe('DONE_LABELS', () => {
   it('has a label for every shelf', () => {
     for (const shelf of SHELVES) expect(DONE_LABELS[shelf]).toBeTruthy();
+  });
+});
+
+describe('groupByPlace', () => {
+  const at = (id: string, location?: string) => note({ id, fields: location ? { location } : {} });
+
+  it('groups by place, biggest first, ties alphabetical, no place last', () => {
+    const groups = groupByPlace([at('1', 'newton'), at('2'), at('3', 'needham'), at('4', 'Newton MA'), at('5', 'boston')]);
+    expect(groups.map(g => [g.label, g.notes.map(n => n.id)])).toEqual([
+      ['Newton', ['1', '4']],
+      ['Boston', ['5']],
+      ['Needham', ['3']],
+      ['No place', ['2']],
+    ]);
+  });
+
+  it('keeps state suffixes in the label', () => {
+    expect(groupByPlace([at('1', 'cabot vt')])[0].label).toBe('Cabot VT');
+  });
+
+  it('omits the No place group when every note has one', () => {
+    expect(groupByPlace([at('1', 'newton')]).map(g => g.label)).toEqual(['Newton']);
   });
 });

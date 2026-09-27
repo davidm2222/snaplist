@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-27 — By place (redesign R5)
+
+- Eat and Do get a **By place** sort: headings per place with counts, biggest first, "No place" last. Optional; Newest first stays the default, and the choice falls back to newest on other shelves. *Why:* on those shelves the question is often "where am I going", and grouping lets you scan every place at once. Redesign mockup: https://claude.ai/artifact/75Jeky6r8doTDjqzj8JDum
+
 ## 2026-09-27 — Been / Finished (redesign R4)
 
 - "Done" is labeled per shelf. Eat **Been here** and Do **Did it** keep the note in the list with a check by the place, and the filter gains Been: All / Not yet / Been. Read **Read it**, Watch **Watched**, Buy **Bought** move it to a collapsed **Finished** section, with an Undo toast. Same `done` field, no migration. *Why:* for restaurants and activities "done" is useful metadata, not closure; the old behavior made the app feel like a task list.

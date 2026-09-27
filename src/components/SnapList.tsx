@@ -16,7 +16,7 @@ import { ReviewModal } from './ReviewModal';
 import { FilterBar, FilterOption, SortOrder, BeenFilter } from './FilterBar';
 import { CategoryIcon, SearchIcon, CheckCircleIcon, ChevronDownIcon, PlusIcon } from './Icons';
 import { hasKnownPrefix, isBareUrl, parseNote } from '@/lib/parseNote';
-import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation, isFinished, doneStaysInList } from '@/lib/notes';
+import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation, isFinished, doneStaysInList, groupByPlace } from '@/lib/notes';
 
 // Android share target (see manifest.ts) opens /?title=&text=&url=.
 // Apps often put the link inside `text` rather than `url`.
@@ -76,8 +76,10 @@ export function SnapList() {
     return counts;
   }, [notes]);
 
-  // "Been" filter only makes sense on shelves where done notes stay in the list
+  // Eat / Do (not searching): "Been" filter and "By place" sort only make sense here.
+  // A "By place" choice is remembered but falls back to newest on other shelves.
   const showBeenFilter = !searchQuery.trim() && activeTab !== 'all' && doneStaysInList(activeTab);
+  const effectiveSort: SortOrder = sort === 'place' && !showBeenFilter ? 'newest' : sort;
 
   // Filter notes. Search is GLOBAL; the tab only applies when not searching.
   // Type/place options come from the tab (or search) results, not counting Finished notes.
@@ -208,6 +210,18 @@ export function SnapList() {
     await addNote(parseNote(trimmed, knownLocations(notes)), trimmed);
   };
 
+  const renderCard = (note: Note) => (
+    <NoteCard
+      key={note.id}
+      note={note}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      onToggleDone={handleToggleDone}
+      expanded={expandedId === note.id}
+      onToggleExpand={() => setExpandedId(id => id === note.id ? null : note.id)}
+    />
+  );
+
   // Show auth modal if not logged in
   if (!authLoading && !user) {
     return <AuthModal isOpen={true} />;
@@ -251,7 +265,8 @@ export function SnapList() {
             places={placeOptions}
             type={typeFilter}
             place={placeFilter}
-            sort={sort}
+            sort={effectiveSort}
+            allowPlaceSort={showBeenFilter}
             onTypeChange={setTypeFilter}
             onPlaceChange={setPlaceFilter}
             onSortChange={setSort}
@@ -301,17 +316,17 @@ export function SnapList() {
               </p>
             )}
             <div className="space-y-1">
-              {activeNotes.map(note => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onToggleDone={handleToggleDone}
-                  expanded={expandedId === note.id}
-                  onToggleExpand={() => setExpandedId(id => id === note.id ? null : note.id)}
-                />
-              ))}
+              {effectiveSort === 'place'
+                ? groupByPlace(activeNotes).map(group => (
+                    <section key={group.key || 'none'} className="space-y-1">
+                      <h3 className="flex gap-1.5 px-1 pt-3 pb-0.5 text-[13px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        {group.label}
+                        <span className="font-medium opacity-70 tabular-nums">{group.notes.length}</span>
+                      </h3>
+                      {group.notes.map(renderCard)}
+                    </section>
+                  ))
+                : activeNotes.map(renderCard)}
             </div>
 
             {/* Completed drawer */}
@@ -331,17 +346,7 @@ export function SnapList() {
                 </button>
                 {showCompleted && (
                   <div className="mt-1 space-y-1">
-                    {doneNotes.map(note => (
-                      <NoteCard
-                        key={note.id}
-                        note={note}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onToggleDone={handleToggleDone}
-                        expanded={expandedId === note.id}
-                  onToggleExpand={() => setExpandedId(id => id === note.id ? null : note.id)}
-                      />
-                    ))}
+                    {doneNotes.map(renderCard)}
                   </div>
                 )}
               </div>

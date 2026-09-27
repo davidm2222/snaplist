@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FilterIcon } from './Icons';
 
-export type SortOrder = 'newest' | 'az';
+export type SortOrder = 'newest' | 'az' | 'place';
 /** '' = all, 'not' = not been yet, 'been' = been there */
 export type BeenFilter = '' | 'not' | 'been';
 
@@ -23,6 +23,8 @@ interface FilterBarProps {
   onPlaceChange: (place: string) => void;
   onSortChange: (sort: SortOrder) => void;
   onClear: () => void;
+  /** Eat / Do only: offer the "By place" sort */
+  allowPlaceSort?: boolean;
   /** Eat / Do only: pass a value to show the Been filter */
   been?: BeenFilter;
   onBeenChange?: (been: BeenFilter) => void;
@@ -30,14 +32,14 @@ interface FilterBarProps {
   status?: string;
 }
 
-const SORT_LABELS: Record<SortOrder, string> = { newest: 'Newest first', az: 'A–Z' };
+const SORT_LABELS: Record<SortOrder, string> = { newest: 'Newest first', az: 'A–Z', place: 'By place' };
 
 const selectClass =
   'text-[15px] rounded-lg px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-shelf';
 
 // One Filter button; the panel holds type / place / sort. Type and place only appear
 // when there's more than one option to choose from.
-export function FilterBar({ types, places, type, place, sort, onTypeChange, onPlaceChange, onSortChange, onClear, been, onBeenChange, status }: FilterBarProps) {
+export function FilterBar({ types, places, type, place, sort, onTypeChange, onPlaceChange, onSortChange, onClear, allowPlaceSort, been, onBeenChange, status }: FilterBarProps) {
   const [open, setOpen] = useState(false);
   const activeCount = (type ? 1 : 0) + (place ? 1 : 0) + (been ? 1 : 0);
   const showType = types.length > 1 || !!type;
@@ -95,7 +97,7 @@ export function FilterBar({ types, places, type, place, sort, onTypeChange, onPl
           <label className="flex items-center justify-between gap-3 text-base">
             Sort
             <select value={sort} onChange={(e) => onSortChange(e.target.value as SortOrder)} className={selectClass}>
-              {(Object.keys(SORT_LABELS) as SortOrder[]).map(s => <option key={s} value={s}>{SORT_LABELS[s]}</option>)}
+              {(Object.keys(SORT_LABELS) as SortOrder[]).filter(s => s !== 'place' || allowPlaceSort).map(s => <option key={s} value={s}>{SORT_LABELS[s]}</option>)}
             </select>
           </label>
           {activeCount > 0 && (
