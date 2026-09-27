@@ -11,7 +11,6 @@ Future work only. Shipped work moves to [CHANGELOG.md](./CHANGELOG.md).
 ### Browse-first redesign
 Mockup (agreed 2026-09-27): https://claude.ai/artifact/75Jeky6r8doTDjqzj8JDum (the "Dots" phone). The app is mostly for finding things, so the list gets the screen and capture moves behind a button. One commit per step:
 
-- [ ] **R4 Been / Finished:** replace "Done" with a per-shelf label. Eat "Been here", Do "Did it": item stays in the list with a check by the place. Read "Read it", Watch "Watched", Buy "Bought": moves to a collapsed "Finished" section. Eat/Do filter gains Been: All / Not yet / Been. Same `done` field, no migration.
 - [ ] **R5 Group by place:** Eat and Do get a "By place" sort that shows place headings with counts.
 
 *Why:* the app felt utilitarian and cramped, the input took prime space, and "Done" made it feel like a task list when for restaurants and activities it's really "been there" metadata.

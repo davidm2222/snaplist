@@ -13,10 +13,10 @@ import { NoteCard } from './NoteCard';
 import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
 import { ReviewModal } from './ReviewModal';
-import { FilterBar, FilterOption, SortOrder } from './FilterBar';
+import { FilterBar, FilterOption, SortOrder, BeenFilter } from './FilterBar';
 import { CategoryIcon, SearchIcon, CheckCircleIcon, ChevronDownIcon, PlusIcon } from './Icons';
 import { hasKnownPrefix, isBareUrl, parseNote } from '@/lib/parseNote';
-import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation } from '@/lib/notes';
+import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation, isFinished, doneStaysInList } from '@/lib/notes';
 
 // Android share target (see manifest.ts) opens /?title=&text=&url=.
 // Apps often put the link inside `text` rather than `url`.
@@ -39,6 +39,7 @@ export function SnapList() {
   const [activeTab, setActiveTab] = useState<CategoryKey | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState('');
   const [placeFilter, setPlaceFilter] = useState(''); // a locationKey
+  const [beenFilter, setBeenFilter] = useState<BeenFilter>(''); // Eat / Do only
   const [sort, setSort] = useState<SortOrder>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -64,9 +65,9 @@ export function SnapList() {
     if (share) window.history.replaceState(null, '', window.location.pathname);
   }, [share]);
 
-  // Calculate note counts per category — active (non-done) notes only
+  // Calculate note counts per category — excludes Finished notes
   const noteCounts = useMemo(() => {
-    const activeNotes = notes.filter(n => !n.done);
+    const activeNotes = notes.filter(n => !isFinished(n));
     const counts: Record<string, number> = { all: activeNotes.length };
     for (const note of activeNotes) {
       const category = resolveShelf(note);
@@ -75,8 +76,11 @@ export function SnapList() {
     return counts;
   }, [notes]);
 
+  // "Been" filter only makes sense on shelves where done notes stay in the list
+  const showBeenFilter = !searchQuery.trim() && activeTab !== 'all' && doneStaysInList(activeTab);
+
   // Filter notes. Search is GLOBAL; the tab only applies when not searching.
-  // Type/place options come from the tab (or search) results, counting active notes.
+  // Type/place options come from the tab (or search) results, not counting Finished notes.
   const { activeNotes, doneNotes, baseCount, typeOptions, placeOptions } = useMemo(() => {
     const base = searchQuery.trim()
       ? notes.filter(note => matchesSearch(note, searchQuery))
@@ -85,7 +89,7 @@ export function SnapList() {
     const typeCounts = new Map<string, number>();
     const placeCounts = new Map<string, number>();
     for (const note of base) {
-      if (note.done) continue;
+      if (isFinished(note)) continue;
       const type = resolveType(note);
       if (type) typeCounts.set(type, (typeCounts.get(type) ?? 0) + 1);
       if (note.fields.location) {
@@ -106,30 +110,33 @@ export function SnapList() {
     if (placeFilter) {
       filtered = filtered.filter(note => note.fields.location && locationKey(note.fields.location) === placeFilter);
     }
+    if (showBeenFilter && beenFilter) filtered = filtered.filter(note => !!note.done === (beenFilter === 'been'));
     // Notes arrive newest first from Firestore
     if (sort === 'az') {
       filtered = [...filtered].sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
     }
 
     return {
-      activeNotes: filtered.filter(n => !n.done),
-      doneNotes: filtered.filter(n => n.done),
+      activeNotes: filtered.filter(n => !isFinished(n)),
+      doneNotes: filtered.filter(isFinished),
       baseCount: base.length,
       typeOptions: toOptions(typeCounts, v => v.charAt(0).toUpperCase() + v.slice(1)),
       placeOptions: toOptions(placeCounts, formatLocation),
     };
-  }, [notes, activeTab, searchQuery, typeFilter, placeFilter, sort]);
+  }, [notes, activeTab, searchQuery, typeFilter, placeFilter, beenFilter, showBeenFilter, sort]);
 
-  const filtersActive = !!(typeFilter || placeFilter);
+  const filtersActive = !!(typeFilter || placeFilter || (showBeenFilter && beenFilter));
   const clearFilters = () => {
     setTypeFilter('');
     setPlaceFilter('');
+    setBeenFilter('');
   };
 
   // Types belong to a shelf, so switching tabs clears the type filter. Place carries over.
   const handleTabChange = (tab: CategoryKey | 'all') => {
     setActiveTab(tab);
     setTypeFilter('');
+    setBeenFilter('');
   };
 
   const handleToggleDone = async (id: string, done: boolean) => {
@@ -138,6 +145,16 @@ export function SnapList() {
     } catch (err) {
       console.error('Failed to update:', err);
       toast({ tone: 'error', message: "Couldn't update note. Try again." });
+      return;
+    }
+    // Finishing moves the note out of view, so offer a way back
+    const note = notes.find(n => n.id === id);
+    if (done && note && !doneStaysInList(resolveShelf(note))) {
+      setExpandedId(null);
+      toast({
+        message: 'Moved to Finished',
+        action: { label: 'Undo', onClick: () => { setDone(id, false).catch(err => console.error('Failed to undo:', err)); } },
+      });
     }
   };
 
@@ -239,6 +256,8 @@ export function SnapList() {
             onPlaceChange={setPlaceFilter}
             onSortChange={setSort}
             onClear={clearFilters}
+            been={showBeenFilter ? beenFilter : undefined}
+            onBeenChange={setBeenFilter}
             status={searchQuery.trim() ? resultsLabel(activeNotes.length + doneNotes.length) : undefined}
           />
         )}
@@ -278,7 +297,7 @@ export function SnapList() {
             {/* Active notes */}
             {activeNotes.length === 0 && doneNotes.length > 0 && (
               <p className="text-center text-sm text-zinc-400 dark:text-zinc-500 py-6">
-                All done here!
+                Everything here is finished
               </p>
             )}
             <div className="space-y-1">
@@ -305,7 +324,7 @@ export function SnapList() {
                   <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
                   <span className="flex items-center gap-1.5 shrink-0">
                     <CheckCircleIcon className="w-3.5 h-3.5" />
-                    Completed ({doneNotes.length})
+                    Finished ({doneNotes.length})
                     <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${showCompleted ? 'rotate-180' : ''}`} />
                   </span>
                   <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />

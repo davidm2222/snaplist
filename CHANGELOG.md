@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-27 — Been / Finished (redesign R4)
+
+- "Done" is labeled per shelf. Eat **Been here** and Do **Did it** keep the note in the list with a check by the place, and the filter gains Been: All / Not yet / Been. Read **Read it**, Watch **Watched**, Buy **Bought** move it to a collapsed **Finished** section, with an Undo toast. Same `done` field, no migration. *Why:* for restaurants and activities "done" is useful metadata, not closure; the old behavior made the app feel like a task list.
+
 ## 2026-09-27 — Add panel (redesign R3)
 
 - The inline input is gone; a floating + (in the shelf color) opens a bottom sheet with a multi-line box, autocomplete pills, and Add / Review & Save (same logic as before). Enter adds a line; line breaks save as commas. Ctrl/Cmd+Enter submits, Esc closes. Shared text from Android opens the sheet pre-filled. *Why:* natural-language notes overflowed the one-line box, and the input took space from browsing.

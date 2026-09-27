@@ -50,7 +50,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 - **`raw`** is the original input at creation (typed text, or the shared URL). Never updated, not searched.
 - **`fields`** is a free-form `Record<string,string>`. `fields.url` is special (rendered as a link, hidden from the chip row). `fields.location` is a free-text place name, state only when not the home state (`newton`, `cabot VT`); set by `@place`, `location:`, or URL parsing. `normalizeDraft` drops a trailing `MA`; match/display via `locationKey()` / `formatLocation()` in `notes.ts`, never compare raw strings. Everything else is a free-form user label.
 - **Commas:** typed input is split on commas by `parseNote`, so a typed field value can't contain one. Drafts from the review/edit screens are saved directly, so commas there are fine.
-- **`done`**: `undefined`/`false` = active. Optional fields are only written when present, so schema additions need no migration.
+- **`done`**: `undefined`/`false` = active. Meaning is per shelf (`DONE_LABELS`, `doneStaysInList`, `isFinished` in `notes.ts`): on Eat/Do it's "been there" and the note stays listed; elsewhere it's Finished and moves to the bottom section. Optional fields are only written when present, so schema additions need no migration.
 
 ## Conventions
 

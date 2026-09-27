@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { FilterIcon } from './Icons';
 
 export type SortOrder = 'newest' | 'az';
+/** '' = all, 'not' = not been yet, 'been' = been there */
+export type BeenFilter = '' | 'not' | 'been';
 
 export interface FilterOption {
   value: string;
@@ -21,6 +23,9 @@ interface FilterBarProps {
   onPlaceChange: (place: string) => void;
   onSortChange: (sort: SortOrder) => void;
   onClear: () => void;
+  /** Eat / Do only: pass a value to show the Been filter */
+  been?: BeenFilter;
+  onBeenChange?: (been: BeenFilter) => void;
   /** Shown on the right, e.g. "12 results" while searching; defaults to the sort order */
   status?: string;
 }
@@ -32,9 +37,9 @@ const selectClass =
 
 // One Filter button; the panel holds type / place / sort. Type and place only appear
 // when there's more than one option to choose from.
-export function FilterBar({ types, places, type, place, sort, onTypeChange, onPlaceChange, onSortChange, onClear, status }: FilterBarProps) {
+export function FilterBar({ types, places, type, place, sort, onTypeChange, onPlaceChange, onSortChange, onClear, been, onBeenChange, status }: FilterBarProps) {
   const [open, setOpen] = useState(false);
-  const activeCount = (type ? 1 : 0) + (place ? 1 : 0);
+  const activeCount = (type ? 1 : 0) + (place ? 1 : 0) + (been ? 1 : 0);
   const showType = types.length > 1 || !!type;
   const showPlace = places.length > 1 || !!place;
 
@@ -74,6 +79,16 @@ export function FilterBar({ types, places, type, place, sort, onTypeChange, onPl
               <select value={place} onChange={(e) => onPlaceChange(e.target.value)} className={selectClass}>
                 <option value="">Any place</option>
                 {places.map(o => <option key={o.value} value={o.value}>{o.label} ({o.count})</option>)}
+              </select>
+            </label>
+          )}
+          {been !== undefined && onBeenChange && (
+            <label className="flex items-center justify-between gap-3 text-base">
+              Been
+              <select value={been} onChange={(e) => onBeenChange(e.target.value as BeenFilter)} className={selectClass}>
+                <option value="">All</option>
+                <option value="not">Not yet</option>
+                <option value="been">Been</option>
               </select>
             </label>
           )}

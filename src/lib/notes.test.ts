@@ -3,7 +3,7 @@ import type { Note } from '@/types';
 import { CATEGORIES } from '@/types';
 import {
   SHELVES, SHELF_TYPES, isShelf, lookupAlias, resolveShelf, resolveType, matchesSearch, normalizeDraft,
-  stripHomeState, locationKey, formatLocation, knownLocations,
+  stripHomeState, locationKey, formatLocation, knownLocations, DONE_LABELS, isFinished,
 } from './notes';
 
 const note = (over: Partial<Note>): Note => ({
@@ -186,5 +186,34 @@ describe('locations', () => {
   it('strips the home state when saving', () => {
     const d = normalizeDraft({ shelf: 'eat', title: 'x', notes: '', fields: { location: 'Needham MA' }, hashTags: [] });
     expect(d.fields.location).toBe('Needham');
+  });
+});
+
+describe('isFinished', () => {
+  it('is false for active notes', () => {
+    expect(isFinished(note({ shelf: 'read' }))).toBe(false);
+    expect(isFinished(note({ shelf: 'read', done: false }))).toBe(false);
+  });
+
+  it('is true for done notes on Read / Watch / Buy / Other', () => {
+    for (const shelf of ['read', 'watch', 'buy', 'other'] as const) {
+      expect(isFinished(note({ shelf, done: true }))).toBe(true);
+    }
+  });
+
+  it('keeps done Eat / Do notes in the list ("been there")', () => {
+    expect(isFinished(note({ shelf: 'eat', done: true }))).toBe(false);
+    expect(isFinished(note({ shelf: 'do', done: true }))).toBe(false);
+  });
+
+  it('uses the legacy tags fallback for the shelf', () => {
+    expect(isFinished(note({ tags: ['eat'], done: true }))).toBe(false);
+    expect(isFinished(note({ tags: ['book'], done: true }))).toBe(true);
+  });
+});
+
+describe('DONE_LABELS', () => {
+  it('has a label for every shelf', () => {
+    for (const shelf of SHELVES) expect(DONE_LABELS[shelf]).toBeTruthy();
   });
 });

@@ -94,13 +94,13 @@ One place, one input, zero setup per item. Type the way you'd jot something on p
 1. Open app → scan the list on the active shelf, or switch tabs
 2. Search if you can't remember which shelf something is on (search is global)
 3. Tap a row to expand it in place (one at a time) — URL, fields, hashtags, notes, and actions
-4. Act: click the URL, mark done, edit, or delete
+4. Act: click the URL, mark been / finished, edit, or delete
 
-### Triage (Mark Done)
-1. Finished something (read the article, visited the restaurant)
-2. Tap ✓ on the note card → moves to collapsed "Completed" drawer below the active list
-3. Done items stay accessible but don't clutter the active view
-4. Can restore if marked done by mistake
+### Been / Finished
+The done button is labeled per shelf and means different things:
+1. **Eat "Been here", Do "Did it"** — it's metadata, not closure: the note stays in the list with a check by the place, since you'd go back. Filter → Been: All / Not yet / Been.
+2. **Read "Read it", Watch "Watched", Buy "Bought"** (Other "Done") — the note moves to a collapsed "Finished" section below the list, with an Undo toast.
+3. Tap the button again to undo either one.
 
 ---
 
@@ -171,7 +171,7 @@ Rather than `read > books > fiction`, hashtags like `#fiction` handle granularit
 Structured input (`eat: Nobu`) stays instant and free. Anything without a known prefix goes through Haiku to the review screen (2026-09-26), since plain text otherwise gives nothing to organize with. AI fills details only when certain; a blank beats a wrong answer, and the review screen catches mistakes. Revisit: if AI is usually right, save directly with an Edit toast instead of reviewing; if auto-detect surprises, switch to an explicit sparkle button.
 
 **Done/archive over delete**
-Deleting feels permanent and discourages capturing anything time-sensitive. A "done" state lets you clear the active list while keeping a record — true long-term memory behavior.
+Deleting feels permanent and discourages capturing anything time-sensitive. A "done" state lets you clear the active list while keeping a record — true long-term memory behavior. Since 2026-09-27 it's per shelf: for restaurants and activities "done" is really "been there", so it marks the note instead of hiding it (a generic "Done" made the app feel like a task list).
 
 **Firebase + Google Auth**
 Single sign-in with no password to manage. Firestore gives real-time sync across devices without building a backend.

@@ -1,8 +1,8 @@
 'use client';
 
 import { Note, CATEGORIES } from '@/types';
-import { resolveShelf, resolveType, formatLocation } from '@/lib/notes';
-import { EditIcon, TrashIcon, ExternalLinkIcon, CheckCircleIcon } from './Icons';
+import { resolveShelf, resolveType, formatLocation, DONE_LABELS, doneStaysInList } from '@/lib/notes';
+import { EditIcon, TrashIcon, ExternalLinkIcon, CheckIcon } from './Icons';
 
 function extractDomain(url: string): string {
   try {
@@ -51,10 +51,13 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
   const otherFields = Object.entries(note.fields).filter(([key]) => key !== 'url' && key !== 'location');
   const notesText = cleanNotes(note.notes);
   const shelfColor = { color: `var(--${category})` };
+  // Eat / Do: done = "been there", shown as a check. Elsewhere done = finished, shown dimmed.
+  const been = !!note.done && doneStaysInList(category);
+  const finished = !!note.done && !been;
 
   return (
     <div
-      className={`bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800 transition-shadow ${expanded ? 'shadow-lg shadow-black/5 dark:shadow-black/40' : ''} ${note.done ? 'opacity-50' : ''}`}
+      className={`bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800 transition-shadow ${expanded ? 'shadow-lg shadow-black/5 dark:shadow-black/40' : ''} ${finished ? 'opacity-60' : ''}`}
     >
       {/* Row: always visible, tap to expand */}
       <div
@@ -71,10 +74,11 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
         className="flex items-center gap-3 px-3.5 py-3 min-h-[52px] cursor-pointer rounded-xl focus-visible:outline-2 focus-visible:outline-shelf"
       >
         <span className="w-[9px] h-[9px] rounded-full shrink-0" style={{ backgroundColor: `var(--${category})` }} />
-        <span className={`flex-1 min-w-0 font-serif font-semibold text-lg leading-snug text-zinc-900 dark:text-zinc-50 ${expanded ? '' : 'truncate'} ${note.done ? 'line-through' : ''}`}>
+        <span className={`flex-1 min-w-0 font-serif font-semibold text-lg leading-snug text-zinc-900 dark:text-zinc-50 ${expanded ? '' : 'truncate'}`}>
           {note.title}
         </span>
-        <span className="text-[15px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap shrink-0">
+        <span className="inline-flex items-center gap-1 text-[15px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap shrink-0">
+          {been && <CheckIcon className="w-4 h-4" />}
           {place || typeLabel}
         </span>
         {note.fields.url && (
@@ -135,11 +139,14 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
           <div className="flex gap-2 pt-1">
             <button
               onClick={() => onToggleDone?.(note.id, !note.done)}
-              style={shelfColor}
+              aria-pressed={!!note.done}
+              style={note.done
+                ? { backgroundColor: `var(--${category})`, borderColor: `var(--${category})`, color: 'var(--on-shelf)' }
+                : shelfColor}
               className="flex items-center gap-1.5 text-[15px] font-medium px-3.5 py-1.5 rounded-lg border border-current transition-colors"
             >
-              <CheckCircleIcon className="w-4 h-4" />
-              {note.done ? 'Restore' : 'Done'}
+              {note.done && <CheckIcon className="w-4 h-4" />}
+              {DONE_LABELS[category]}
             </button>
             <button
               onClick={() => onEdit?.(note)}

@@ -36,6 +36,20 @@ export function resolveShelf(note: Pick<Note, 'tags' | 'shelf'>): CategoryKey {
   return lookupAlias(tag)?.shelf ?? 'other';
 }
 
+// "Done" means different things per shelf. On Eat and Do it's "been there": the note stays in
+// the list with a check, because you'd go back. Elsewhere it's finished and moves to Finished.
+export const DONE_LABELS: Record<CategoryKey, string> = {
+  read: 'Read it', watch: 'Watched', eat: 'Been here', do: 'Did it', buy: 'Bought', other: 'Done',
+};
+
+export function doneStaysInList(shelf: CategoryKey): boolean {
+  return shelf === 'eat' || shelf === 'do';
+}
+
+export function isFinished(note: Pick<Note, 'tags' | 'shelf' | 'done'>): boolean {
+  return !!note.done && !doneStaysInList(resolveShelf(note));
+}
+
 // Canonical type ("book", "cafe"), or null when only the shelf is known.
 // Older notes may store a synonym ("film") or keep the type in tags[0]; both normalize.
 export function resolveType(note: Pick<Note, 'tags' | 'type'>): string | null {
