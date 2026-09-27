@@ -90,13 +90,6 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
         }}
         className="flex items-center gap-2 px-3 py-2 cursor-pointer"
       >
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleDone?.(note.id, !note.done); }}
-          className={`shrink-0 transition-colors ${note.done ? 'text-emerald-500 hover:text-zinc-400 dark:hover:text-zinc-500' : 'text-zinc-300 dark:text-zinc-600 hover:text-emerald-500 dark:hover:text-emerald-400'}`}
-          title={note.done ? 'Mark active' : 'Mark done'}
-        >
-          <CheckCircleIcon className="w-3.5 h-3.5" />
-        </button>
         <CategoryIcon category={category} className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
         <span className={`font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 ${expanded ? '' : 'truncate'} ${note.done ? 'line-through' : ''}`}>
           {note.title}
@@ -134,7 +127,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
 
       {/* Details: shown in place when expanded */}
       {expanded && (
-        <div className="px-3 pb-3 pl-9 space-y-2">
+        <div className="px-3 pb-3 pl-8 space-y-2">
           {note.fields.url && (
             <a
               href={note.fields.url}
