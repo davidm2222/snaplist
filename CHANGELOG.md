@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-27 — Autocomplete shows all matches
+
+- Typing `@ne` shows a pill for each match (`@needham`, `@newton`), up to 5; tap one to fill it in. Same for `#tags` and fields. *Why:* the single pill showed only the leftover letters ("edham") and hid other matches.
+
 ## 2026-09-26 — Natural-language capture
 
 - **Type anything:** input without a shelf prefix goes to Haiku, then the review screen. "mike broshi told me to read the sun also rises" → Read / Book, *The Sun Also Rises*, author Ernest Hemingway, notes "Mike Broshi recommended". Prefixed input (`eat: …`) still saves instantly. *Why:* the syntax was the heaviest part of capture.

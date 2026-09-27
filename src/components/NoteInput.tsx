@@ -13,11 +13,14 @@ interface NoteInputProps {
   initialValue?: string;
 }
 
+const MAX_OPTIONS = 5;
+
 export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }: NoteInputProps) {
   const toast = useToast();
   const [value, setValue] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [suggestion, setSuggestion] = useState('');
+  // Completions for the token being typed: `partial` is replaced by option + suffix
+  const [completion, setCompletion] = useState<{ start: number; end: number; partial: string; options: string[]; suffix: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Build autocomplete dictionary from existing notes
@@ -52,92 +55,61 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
     };
   }, [notes]);
 
-  // Find suggestion based on current input
+  // Find completions for the token before the cursor
   useEffect(() => {
     if (!value) {
-      setSuggestion('');
+      setCompletion(null);
       return;
     }
 
     const cursorPos = inputRef.current?.selectionStart || value.length;
     const textBeforeCursor = value.slice(0, cursorPos);
 
-    // Check for field value pattern (key:partial)
+    const find = (pool: string[] | undefined, partial: string, suffix = '') => {
+      if (!pool || !partial) return false;
+      const p = partial.toLowerCase();
+      const options = pool.filter(v => v.startsWith(p) && v !== p).slice(0, MAX_OPTIONS);
+      if (!options.length) return false;
+      setCompletion({ start: cursorPos - partial.length, end: cursorPos, partial, options, suffix });
+      return true;
+    };
+
+    // Field value (key:partial)
     const fieldValueMatch = textBeforeCursor.match(/(\w+):([^,]*)$/);
-    if (fieldValueMatch) {
-      const [, key, partial] = fieldValueMatch;
-      const values = autocompleteData.values[key.toLowerCase()];
-      if (values && partial) {
-        const match = values.find(v =>
-          v.startsWith(partial.toLowerCase()) && v !== partial.toLowerCase()
-        );
-        if (match) {
-          setSuggestion(value + match.slice(partial.length));
-          return;
-        }
-      }
-    }
+    if (fieldValueMatch && find(autocompleteData.values[fieldValueMatch[1].toLowerCase()], fieldValueMatch[2])) return;
 
-    // Check for field name pattern (after comma, typing a word without colon yet)
-    const fieldNameMatch = textBeforeCursor.match(/,\s*(\w+)$/);
-    if (fieldNameMatch) {
-      const [, partial] = fieldNameMatch;
-      if (partial.length >= 2) {
-        const match = autocompleteData.fieldNames.find(name =>
-          name.startsWith(partial.toLowerCase()) && name !== partial.toLowerCase()
-        );
-        if (match) {
-          setSuggestion(value + match.slice(partial.length) + ':');
-          return;
-        }
-      }
-    }
+    // Field name (after comma, typing a word without colon yet)
+    const fieldNameMatch = textBeforeCursor.match(/,\s*(\w{2,})$/);
+    if (fieldNameMatch && find(autocompleteData.fieldNames, fieldNameMatch[1], ':')) return;
 
-    // Check for place pattern (@partial) — may be multi-word ("@chestnut h")
+    // Place (@partial) — may be multi-word ("@chestnut h")
     const placeMatch = textBeforeCursor.match(/(?:^|\s)@([^,#@]*)$/);
-    if (placeMatch) {
-      const partial = placeMatch[1].toLowerCase();
-      if (partial) {
-        const match = autocompleteData.places.find(p => p.startsWith(partial) && p !== partial);
-        if (match) {
-          setSuggestion(value + match.slice(partial.length));
-          return;
-        }
-      }
-    }
+    if (placeMatch && find(autocompleteData.places, placeMatch[1])) return;
 
-    // Check for hashtag pattern (#partial)
+    // Hashtag (#partial)
     const hashMatch = textBeforeCursor.match(/#(\w*)$/);
-    if (hashMatch) {
-      const [, partial] = hashMatch;
-      const tags = autocompleteData.values['#'];
-      if (tags && partial) {
-        const match = tags.find(t =>
-          t.startsWith(partial.toLowerCase()) && t !== partial.toLowerCase()
-        );
-        if (match) {
-          setSuggestion(value + match.slice(partial.length));
-          return;
-        }
-      }
-    }
+    if (hashMatch && find(autocompleteData.values['#'], hashMatch[1])) return;
 
-    setSuggestion('');
+    setCompletion(null);
   }, [value, autocompleteData]);
 
-  const acceptSuggestion = () => {
-    if (suggestion) {
-      setValue(suggestion);
-      setSuggestion('');
+  const accept = (option: string) => {
+    if (!completion) return;
+    const { start, end, suffix } = completion;
+    const next = value.slice(0, start) + option + suffix;
+    setValue(next + value.slice(end));
+    setCompletion(null);
+    requestAnimationFrame(() => {
       inputRef.current?.focus();
-    }
+      inputRef.current?.setSelectionRange(next.length, next.length);
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Tab to accept suggestion
-    if (e.key === 'Tab' && suggestion) {
+    // Tab accepts the first option
+    if (e.key === 'Tab' && completion) {
       e.preventDefault();
-      acceptSuggestion();
+      accept(completion.options[0]);
     }
   };
 
@@ -149,7 +121,7 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
     try {
       await onSubmit(value.trim());
       setValue('');
-      setSuggestion('');
+      setCompletion(null);
     } catch (err) {
       console.error('Failed to add note:', err);
       toast({ tone: 'error', message: "Couldn't save note. Your text is still here, try again." });
@@ -165,11 +137,11 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
     <form onSubmit={handleSubmit} className="w-full">
       <div className="relative">
         {/* Ghost text for autocomplete suggestion */}
-        {suggestion && (
+        {completion && completion.end === value.length && (
           <div className="absolute inset-0 px-4 py-3 pr-24 pointer-events-none">
             <span className="invisible">{value}</span>
             <span className="text-zinc-300 dark:text-zinc-600">
-              {suggestion.slice(value.length)}
+              {completion.options[0].slice(completion.partial.length) + completion.suffix}
             </span>
           </div>
         )}
@@ -191,15 +163,21 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
           {isSubmitting ? '...' : needsReview ? 'Review & Save' : 'Add'}
         </button>
       </div>
-      {suggestion ? (
-        <button
-          type="button"
-          onClick={acceptSuggestion}
-          className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium active:scale-95 transition-transform"
-        >
-          {suggestion.slice(value.length)}
-          <span className="text-amber-400 dark:text-amber-500 hidden sm:inline">Tab</span>
-        </button>
+      {completion ? (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {completion.options.map((option, i) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => accept(option)}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium active:scale-95 transition-transform"
+            >
+              {/[@#]/.test(value[completion.start - 1] ?? '') && value[completion.start - 1]}
+              {option}
+              {i === 0 && <span className="text-amber-400 dark:text-amber-500 hidden sm:inline">Tab</span>}
+            </button>
+          ))}
+        </div>
       ) : needsReview && !isBareUrl(value) ? (
         <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
           AI will fill in the details. Start with <span className="font-mono text-zinc-500 dark:text-zinc-400">eat:</span>, <span className="font-mono text-zinc-500 dark:text-zinc-400">read:</span>… to save instantly.
