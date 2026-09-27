@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ToastProvider } from "@/components/Toast";
@@ -22,6 +22,11 @@ export const metadata: Metadata = {
     icon: '/icon-192.png',
     apple: '/icon-192.png',
   },
+};
+
+// Keyboard resizes the layout, so the bottom add sheet stays above it on Android
+export const viewport: Viewport = {
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

@@ -11,17 +11,18 @@ interface NoteInputProps {
   disabled?: boolean;
   notes?: Note[];
   initialValue?: string;
+  onCancel?: () => void;
 }
 
 const MAX_OPTIONS = 5;
 
-export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }: NoteInputProps) {
+export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '', onCancel }: NoteInputProps) {
   const toast = useToast();
   const [value, setValue] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Completions for the token being typed: `partial` is replaced by option + suffix
   const [completion, setCompletion] = useState<{ start: number; end: number; partial: string; options: string[]; suffix: string } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Build autocomplete dictionary from existing notes
   const autocompleteData = useMemo(() => {
@@ -75,7 +76,7 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
     };
 
     // Field value (key:partial)
-    const fieldValueMatch = textBeforeCursor.match(/(\w+):([^,]*)$/);
+    const fieldValueMatch = textBeforeCursor.match(/(\w+):([^,\n]*)$/);
     if (fieldValueMatch && find(autocompleteData.values[fieldValueMatch[1].toLowerCase()], fieldValueMatch[2])) return;
 
     // Field name (after comma, typing a word without colon yet)
@@ -83,7 +84,7 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
     if (fieldNameMatch && find(autocompleteData.fieldNames, fieldNameMatch[1], ':')) return;
 
     // Place (@partial) — may be multi-word ("@chestnut h")
-    const placeMatch = textBeforeCursor.match(/(?:^|\s)@([^,#@]*)$/);
+    const placeMatch = textBeforeCursor.match(/(?:^|\s)@([^,#@\n]*)$/);
     if (placeMatch && find(autocompleteData.places, placeMatch[1])) return;
 
     // Hashtag (#partial)
@@ -110,6 +111,11 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
     if (e.key === 'Tab' && completion) {
       e.preventDefault();
       accept(completion.options[0]);
+    } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      e.currentTarget.closest('form')?.requestSubmit();
+    } else if (e.key === 'Escape') {
+      onCancel?.();
     }
   };
 
@@ -119,7 +125,8 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
 
     setIsSubmitting(true);
     try {
-      await onSubmit(value.trim());
+      // Line breaks act like commas, so a new line starts the notes after a title
+      await onSubmit(value.trim().replace(/\s*\n+\s*/g, ', '));
       setValue('');
       setCompletion(null);
     } catch (err) {
@@ -134,59 +141,58 @@ export function NoteInput({ onSubmit, disabled, notes = [], initialValue = '' }:
   const needsReview = !!value.trim() && (isBareUrl(value) || !hasKnownPrefix(value.trim()));
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
-      <div className="relative">
-        {/* Ghost text for autocomplete suggestion */}
-        {completion && completion.end === value.length && (
-          <div className="absolute inset-0 px-4 py-3 pr-24 pointer-events-none">
-            <span className="invisible">{value}</span>
-            <span className="text-zinc-300 dark:text-zinc-600">
-              {completion.options[0].slice(completion.partial.length) + completion.suffix}
-            </span>
-          </div>
+    <form onSubmit={handleSubmit} className="w-full space-y-3">
+      <textarea
+        ref={inputRef}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={disabled || isSubmitting}
+        autoFocus
+        rows={4}
+        placeholder={'le petit four in wellesley, best croissants\nor  eat: Nobu @nyc #sushi'}
+        className="w-full px-3.5 py-3 rounded-xl bg-background border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-shelf focus:border-transparent resize-none text-[17px] leading-relaxed"
+      />
+
+      <div className="min-h-[30px] flex flex-wrap gap-1.5">
+        {completion?.options.map((option, i) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => accept(option)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-[15px] font-medium active:scale-95 transition-transform"
+          >
+            {/[@#]/.test(value[completion.start - 1] ?? '') && value[completion.start - 1]}
+            {option}
+            {i === 0 && <span className="text-xs text-zinc-400 hidden sm:inline">Tab</span>}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-[15px] text-zinc-500 dark:text-zinc-400">
+        {needsReview && !isBareUrl(value) ? (
+          <>AI will fill in the details. Start with <code className="font-mono text-sm">eat:</code>, <code className="font-mono text-sm">read:</code>… to save instantly.</>
+        ) : (
+          <>Format: <code className="font-mono text-sm">shelf: Title #tag @place, notes, key:value</code></>
         )}
-        <input
-          ref={inputRef}
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={disabled || isSubmitting}
-          placeholder="le petit four in wellesley, best croissants  —  or eat: Nobu @nyc #sushi"
-          className="w-full px-4 py-3 pr-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all text-base"
-        />
+      </p>
+
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-[15px] font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+        >
+          Cancel
+        </button>
         <button
           type="submit"
           disabled={!value.trim() || disabled || isSubmitting}
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-900 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+          className="px-5 py-2 rounded-lg bg-shelf text-on-shelf text-base font-semibold disabled:opacity-45 disabled:cursor-not-allowed transition-opacity"
         >
-          {isSubmitting ? '...' : needsReview ? 'Review & Save' : 'Add'}
+          {isSubmitting ? 'Saving…' : needsReview ? 'Review & Save' : 'Add'}
         </button>
       </div>
-      {completion ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {completion.options.map((option, i) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => accept(option)}
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium active:scale-95 transition-transform"
-            >
-              {/[@#]/.test(value[completion.start - 1] ?? '') && value[completion.start - 1]}
-              {option}
-              {i === 0 && <span className="text-amber-400 dark:text-amber-500 hidden sm:inline">Tab</span>}
-            </button>
-          ))}
-        </div>
-      ) : needsReview && !isBareUrl(value) ? (
-        <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
-          AI will fill in the details. Start with <span className="font-mono text-zinc-500 dark:text-zinc-400">eat:</span>, <span className="font-mono text-zinc-500 dark:text-zinc-400">read:</span>… to save instantly.
-        </p>
-      ) : (
-        <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
-          Format: <span className="font-mono text-zinc-500 dark:text-zinc-400">category: Title #tag @place, notes, key:value</span>
-        </p>
-      )}
     </form>
   );
 }

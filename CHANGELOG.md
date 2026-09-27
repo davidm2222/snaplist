@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-27 — Add panel (redesign R3)
+
+- The inline input is gone; a floating + (in the shelf color) opens a bottom sheet with a multi-line box, autocomplete pills, and Add / Review & Save (same logic as before). Enter adds a line; line breaks save as commas. Ctrl/Cmd+Enter submits, Esc closes. Shared text from Android opens the sheet pre-filled. *Why:* natural-language notes overflowed the one-line box, and the input took space from browsing.
+
 ## 2026-09-27 — Browse-first layout (redesign R2)
 
 - App bar, search, and shelf tabs share one sticky header, so they stay reachable while scrolling. Type / place / sort moved behind a single Filter button with a count badge; while searching, the right side shows the result count. *Why:* three dropdowns took space even when unused, and the list should get the screen.

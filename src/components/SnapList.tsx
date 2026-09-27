@@ -14,7 +14,7 @@ import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
 import { ReviewModal } from './ReviewModal';
 import { FilterBar, FilterOption, SortOrder } from './FilterBar';
-import { CategoryIcon, SearchIcon, CheckCircleIcon, ChevronDownIcon } from './Icons';
+import { CategoryIcon, SearchIcon, CheckCircleIcon, ChevronDownIcon, PlusIcon } from './Icons';
 import { hasKnownPrefix, isBareUrl, parseNote } from '@/lib/parseNote';
 import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation } from '@/lib/notes';
 
@@ -48,6 +48,10 @@ export function SnapList() {
   const [reviewing, setReviewing] = useState<{ url?: string; text?: string } | null>(
     share?.url ? { url: share.url } : null
   );
+  // Add panel; shared text (no link) opens it pre-filled
+  const [adding, setAdding] = useState(!!share && !share.url);
+  const [addSeed, setAddSeed] = useState(share && !share.url ? share.text : '');
+  const closeAdd = () => { setAdding(false); setAddSeed(''); };
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -223,10 +227,7 @@ export function SnapList() {
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 pt-1 pb-8 space-y-3">
-        {/* Input with autocomplete (moves behind a + button in R3) */}
-        <NoteInput onSubmit={handleNoteSubmit} disabled={notesLoading} notes={notes} initialValue={share && !share.url ? share.text : ''} />
-
+      <main className="max-w-3xl mx-auto px-4 pt-1 pb-28 space-y-3">
         {baseCount > 0 && (
           <FilterBar
             types={activeTab === 'all' && !searchQuery ? [] : typeOptions}
@@ -260,7 +261,7 @@ export function SnapList() {
                 : searchQuery
                 ? 'No notes match your search'
                 : activeTab === 'all'
-                ? 'No notes yet. Add your first one above!'
+                ? 'No notes yet. Tap + to add your first one.'
                 : `No ${CATEGORIES[activeTab].name.toLowerCase()} yet`}
             </p>
             {filtersActive && (
@@ -329,6 +330,37 @@ export function SnapList() {
           </div>
         )}
       </main>
+
+      {/* Add: floating button + bottom sheet */}
+      {!adding && (
+        <button
+          onClick={() => setAdding(true)}
+          aria-label="Add a note"
+          className="fixed right-5 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-30 w-14 h-14 rounded-full bg-shelf text-on-shelf shadow-lg shadow-black/20 grid place-items-center active:scale-95 transition-transform"
+        >
+          <PlusIcon className="w-6 h-6" />
+        </button>
+      )}
+      {adding && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/35" onClick={closeAdd} />
+          <div
+            role="dialog"
+            aria-label="Add a note"
+            className="relative w-full max-w-3xl bg-white dark:bg-zinc-900 rounded-t-3xl px-5 pt-2.5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] space-y-3 animate-in"
+          >
+            <div className="mx-auto w-10 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+            <h2 className="font-serif font-semibold text-xl text-zinc-900 dark:text-zinc-50">Add to SnapList</h2>
+            <NoteInput
+              onSubmit={async (raw) => { await handleNoteSubmit(raw); closeAdd(); }}
+              onCancel={closeAdd}
+              disabled={notesLoading}
+              notes={notes}
+              initialValue={addSeed}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {editingNote && (

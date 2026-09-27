@@ -108,7 +108,7 @@ One place, one input, zero setup per item. Type the way you'd jot something on p
 
 | Screen | Purpose | Key Elements |
 |--------|---------|--------------|
-| Main app | Capture and browse | Text input with parse preview, category tabs with counts, one-line note rows that expand in place, search bar |
+| Main app | Capture and browse | + button opening a multi-line add sheet, category tabs with counts, one-line note rows that expand in place, search bar |
 | Review modal | Confirm AI-parsed URL before saving | Editable parsed note preview, save / cancel |
 | Edit modal | Edit an existing note | Raw text input, category selector |
 | Import page | One-time Supabase → Firebase migration | File upload, import action (internal tooling) |

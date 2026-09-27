@@ -32,7 +32,7 @@ Parser and URL extractors have unit tests — add a test with every parser chang
 | `src/lib/firebase.ts` | Firebase init (client only; no-ops if env vars missing) |
 | `src/components/SnapList.tsx` | App shell: state, filtering (tab, search, type, place, sort), active/done split, layout |
 | `src/components/FilterBar.tsx` | Filter button + panel: type / place / sort (native `<select>`), badge shows active count |
-| `src/components/NoteInput.tsx` | Input with autocomplete (fields, `#tags`, `@places`); prefixed text saves instantly, bare URL or unprefixed text → review flow |
+| `src/components/NoteInput.tsx` | Multi-line add box (in the bottom sheet opened by the + button) with autocomplete pills (fields, `#tags`, `@places`); line breaks become commas; prefixed text saves instantly, bare URL or unprefixed text → review flow |
 | `src/components/ReviewModal.tsx` | AI-assisted review for links and unprefixed text |
 | `src/components/NoteCard.tsx` | Note display (compact + expanded) |
 | `src/components/EditModal.tsx` | Edit shelf / type / text |
