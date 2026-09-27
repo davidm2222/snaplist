@@ -17,7 +17,8 @@ interface NoteCardProps {
   onEdit?: (note: Note) => void;
   onDelete?: (id: string) => void;
   onToggleDone?: (id: string, done: boolean) => void;
-  compact?: boolean;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 // Notes saved before the parser fix can carry orphan commas (", , great omakase")
@@ -57,7 +58,7 @@ function formatRelativeTime(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString();
 }
 
-export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: NoteCardProps) {
+export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onToggleExpand }: NoteCardProps) {
   const category = resolveShelf(note);
   const categoryData = CATEGORIES[category];
   const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other;
@@ -69,160 +70,140 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, compact }: Note
   // url and location have their own display; the rest render as generic chips
   const otherFields = Object.entries(note.fields).filter(([key]) => key !== 'url' && key !== 'location');
 
-  if (compact) {
-    return (
+  const notesText = cleanNotes(note.notes);
+
+  return (
+    <div
+      className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} transition-all ${expanded ? 'shadow-md' : 'hover:shadow-md'} ${note.done ? 'opacity-50' : ''}`}
+    >
+      {/* Row: always visible, tap to expand */}
       <div
-        onClick={() => onEdit?.(note)}
-        className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} cursor-pointer transition-all hover:shadow-md ${note.done ? 'opacity-50' : ''}`}
+        role="button"
+        tabIndex={0}
+        aria-expanded={!!expanded}
+        onClick={onToggleExpand}
+        onKeyDown={(e) => {
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onToggleExpand?.();
+          }
+        }}
+        className="flex items-center gap-2 px-3 py-2 cursor-pointer"
       >
-        <div className="flex items-center gap-2 px-3 py-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggleDone?.(note.id, !note.done); }}
-            className={`shrink-0 transition-colors ${note.done ? 'text-emerald-500 hover:text-zinc-400 dark:hover:text-zinc-500' : 'text-zinc-300 dark:text-zinc-600 hover:text-emerald-500 dark:hover:text-emerald-400'}`}
-            title={note.done ? 'Mark active' : 'Mark done'}
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleDone?.(note.id, !note.done); }}
+          className={`shrink-0 transition-colors ${note.done ? 'text-emerald-500 hover:text-zinc-400 dark:hover:text-zinc-500' : 'text-zinc-300 dark:text-zinc-600 hover:text-emerald-500 dark:hover:text-emerald-400'}`}
+          title={note.done ? 'Mark active' : 'Mark done'}
+        >
+          <CheckCircleIcon className="w-3.5 h-3.5" />
+        </button>
+        <CategoryIcon category={category} className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+        <span className={`font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 ${expanded ? '' : 'truncate'} ${note.done ? 'line-through' : ''}`}>
+          {note.title}
+        </span>
+        <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${badgeClass}`}>
+          {chipLabel}
+        </span>
+        {note.fields.location && (
+          <span className="inline-flex items-center gap-0.5 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
+            <MapPinIcon className="w-3 h-3" />
+            {formatLocation(note.fields.location)}
+          </span>
+        )}
+        {!expanded && note.hashTags.length > 0 && (
+          <span className="text-[11px] text-teal-500 dark:text-teal-400 truncate hidden sm:inline">
+            #{note.hashTags[0]}{note.hashTags.length > 1 && ` +${note.hashTags.length - 1}`}
+          </span>
+        )}
+        {note.fields.url && (
+          <a
+            href={note.fields.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="ml-auto shrink-0 text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+            title={note.fields.url}
           >
-            <CheckCircleIcon className="w-3.5 h-3.5" />
-          </button>
-          <CategoryIcon category={category} className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-          <span className={`font-medium font-serif text-sm text-zinc-900 dark:text-zinc-50 truncate ${note.done ? 'line-through' : ''}`}>
-            {note.title}
-          </span>
-          <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${badgeClass}`}>
-            {chipLabel}
-          </span>
-          {note.fields.location && (
-            <span className="inline-flex items-center gap-0.5 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
-              <MapPinIcon className="w-3 h-3" />
-              {formatLocation(note.fields.location)}
-            </span>
-          )}
-          {note.hashTags.length > 0 && (
-            <span className="text-[11px] text-teal-500 dark:text-teal-400 truncate hidden sm:inline">
-              #{note.hashTags[0]}{note.hashTags.length > 1 && ` +${note.hashTags.length - 1}`}
-            </span>
-          )}
+            <ExternalLinkIcon className="w-3.5 h-3.5" />
+          </a>
+        )}
+        <span className={`text-[11px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap tabular-nums shrink-0 ${note.fields.url ? '' : 'ml-auto'}`}>
+          {formatRelativeTime(note.timestamp)}
+        </span>
+      </div>
+
+      {/* Details: shown in place when expanded */}
+      {expanded && (
+        <div className="px-3 pb-3 pl-9 space-y-2">
           {note.fields.url && (
             <a
               href={note.fields.url}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="ml-auto shrink-0 text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
-              title={note.fields.url}
+              className="inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             >
-              <ExternalLinkIcon className="w-3.5 h-3.5" />
+              <ExternalLinkIcon className="w-3 h-3" />
+              {extractDomain(note.fields.url)}
             </a>
           )}
-          <span className={`text-[11px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap tabular-nums shrink-0 ${note.fields.url ? '' : 'ml-auto'}`}>
-            {formatRelativeTime(note.timestamp)}
-          </span>
+
+          {otherFields.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {otherFields.map(([key, value]) => (
+                <span
+                  key={key}
+                  className="text-xs px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+                >
+                  <span className="font-medium text-zinc-500 dark:text-zinc-400">{key}:</span> {value}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {note.hashTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {note.hashTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {notesText && (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              {notesText}
+            </p>
+          )}
+
+          <div className="flex gap-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              onClick={() => onToggleDone?.(note.id, !note.done)}
+              className={`flex items-center gap-1 text-xs transition-colors ${note.done ? 'text-emerald-500 hover:text-zinc-400 dark:hover:text-zinc-500' : 'text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
+            >
+              <CheckCircleIcon className="w-3 h-3" />
+              {note.done ? 'Restore' : 'Done'}
+            </button>
+            <button
+              onClick={() => onEdit?.(note)}
+              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            >
+              <EditIcon className="w-3 h-3" />
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete?.(note.id)}
+              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+            >
+              <TrashIcon className="w-3 h-3" />
+              Delete
+            </button>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 border-l-[3px] ${accentClass} transition-all hover:shadow-md ${note.done ? 'opacity-60' : ''}`}>
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <CategoryIcon category={category} className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-            <h3 className={`font-semibold font-serif text-zinc-900 dark:text-zinc-50 ${note.done ? 'line-through' : ''}`}>
-              {note.title}
-            </h3>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
-              {chipLabel}
-            </span>
-          </div>
-          <span className="text-xs text-zinc-400 dark:text-zinc-500 whitespace-nowrap tabular-nums">
-            {formatRelativeTime(note.timestamp)}
-          </span>
-        </div>
-
-        {/* Location + URL */}
-        {(note.fields.location || note.fields.url) && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 mb-2">
-            {note.fields.location && (
-              <span className="inline-flex items-center gap-1 text-zinc-500 dark:text-zinc-400">
-                <MapPinIcon className="w-3 h-3" />
-                {formatLocation(note.fields.location)}
-              </span>
-            )}
-            {note.fields.url && (
-              <a
-                href={note.fields.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-              >
-                <ExternalLinkIcon className="w-3 h-3" />
-                {extractDomain(note.fields.url)}
-              </a>
-            )}
-          </div>
-        )}
-
-        {/* Other fields */}
-        {otherFields.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {otherFields.map(([key, value]) => (
-              <span
-                key={key}
-                className="text-xs px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
-              >
-                <span className="font-medium text-zinc-500 dark:text-zinc-400">{key}:</span> {value}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Hashtags */}
-        {note.hashTags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {note.hashTags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Notes text */}
-        {cleanNotes(note.notes) && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3 leading-relaxed">
-            {cleanNotes(note.notes)}
-          </p>
-        )}
-
-        {/* Actions */}
-        <div className="flex gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-          <button
-            onClick={() => onToggleDone?.(note.id, !note.done)}
-            className={`flex items-center gap-1 text-xs transition-colors ${note.done ? 'text-emerald-500 hover:text-zinc-400 dark:hover:text-zinc-500' : 'text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
-          >
-            <CheckCircleIcon className="w-3 h-3" />
-            {note.done ? 'Restore' : 'Done'}
-          </button>
-          <button
-            onClick={() => onEdit?.(note)}
-            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-          >
-            <EditIcon className="w-3 h-3" />
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete?.(note.id)}
-            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-          >
-            <TrashIcon className="w-3 h-3" />
-            Delete
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -93,7 +93,7 @@ One place, one input, zero setup per item. Type the way you'd jot something on p
 ### Browse and Act
 1. Open app → scan the list on the active shelf, or switch tabs
 2. Search if you can't remember which shelf something is on (search is global)
-3. Expand a note to see URL, fields, hashtags, and actions
+3. Tap a row to expand it in place (one at a time) — URL, fields, hashtags, notes, and actions
 4. Act: click the URL, mark done, edit, or delete
 
 ### Triage (Mark Done)
@@ -108,7 +108,7 @@ One place, one input, zero setup per item. Type the way you'd jot something on p
 
 | Screen | Purpose | Key Elements |
 |--------|---------|--------------|
-| Main app | Capture and browse | Text input with parse preview, category tabs with counts, note list, search bar, compact/expanded toggle |
+| Main app | Capture and browse | Text input with parse preview, category tabs with counts, one-line note rows that expand in place, search bar |
 | Review modal | Confirm AI-parsed URL before saving | Editable parsed note preview, save / cancel |
 | Edit modal | Edit an existing note | Raw text input, category selector |
 | Import page | One-time Supabase → Firebase migration | File upload, import action (internal tooling) |

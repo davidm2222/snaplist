@@ -14,7 +14,7 @@ import { AuthModal } from './AuthModal';
 import { EditModal } from './EditModal';
 import { ReviewModal } from './ReviewModal';
 import { FilterBar, FilterOption, SortOrder } from './FilterBar';
-import { CategoryIcon, SearchIcon, ListIcon, CardIcon, CheckCircleIcon, ChevronDownIcon } from './Icons';
+import { CategoryIcon, SearchIcon, CheckCircleIcon, ChevronDownIcon } from './Icons';
 import { hasKnownPrefix, isBareUrl, parseNote } from '@/lib/parseNote';
 import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation } from '@/lib/notes';
 
@@ -46,7 +46,7 @@ export function SnapList() {
   const [reviewing, setReviewing] = useState<{ url?: string; text?: string } | null>(
     share?.url ? { url: share.url } : null
   );
-  const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
@@ -242,14 +242,6 @@ export function SnapList() {
               onPlaceChange={setPlaceFilter}
               onSortChange={setSort}
             />
-            <button
-              onClick={() => setViewMode(viewMode === 'compact' ? 'expanded' : 'compact')}
-              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors px-2 py-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              title={viewMode === 'compact' ? 'Expanded view' : 'Compact view'}
-            >
-              {viewMode === 'compact' ? <CardIcon className="w-3.5 h-3.5" /> : <ListIcon className="w-3.5 h-3.5" />}
-              {viewMode === 'compact' ? 'Expanded' : 'Compact'}
-            </button>
           </div>
         )}
         {notesLoading ? (
@@ -291,7 +283,7 @@ export function SnapList() {
                 All done here!
               </p>
             )}
-            <div className={viewMode === 'compact' ? 'space-y-1' : 'space-y-2'}>
+            <div className="space-y-1">
               {activeNotes.map(note => (
                 <NoteCard
                   key={note.id}
@@ -299,7 +291,8 @@ export function SnapList() {
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                   onToggleDone={handleToggleDone}
-                  compact={viewMode === 'compact'}
+                  expanded={expandedId === note.id}
+                  onToggleExpand={() => setExpandedId(id => id === note.id ? null : note.id)}
                 />
               ))}
             </div>
@@ -320,7 +313,7 @@ export function SnapList() {
                   <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
                 </button>
                 {showCompleted && (
-                  <div className={`mt-1 ${viewMode === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+                  <div className="mt-1 space-y-1">
                     {doneNotes.map(note => (
                       <NoteCard
                         key={note.id}
@@ -328,7 +321,8 @@ export function SnapList() {
                         onEdit={handleEdit}
                         onDelete={handleDelete}
                         onToggleDone={handleToggleDone}
-                        compact={viewMode === 'compact'}
+                        expanded={expandedId === note.id}
+                  onToggleExpand={() => setExpandedId(id => id === note.id ? null : note.id)}
                       />
                     ))}
                   </div>
