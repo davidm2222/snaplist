@@ -8,7 +8,20 @@ Future work only. Shipped work moves to [CHANGELOG.md](./CHANGELOG.md).
 
 ## Now
 
-### Verify capture on device
+### Browse-first redesign
+Mockup (agreed 2026-09-27): https://claude.ai/artifact/75Jeky6r8doTDjqzj8JDum (the "Dots" phone). The app is mostly for finding things, so the list gets the screen and capture moves behind a button. One commit per step:
+
+- [ ] **R1 Look:** Source Serif 4 titles / Source Sans 3 body; larger type (18px titles, 15–16px text, 52px rows); shelf colors drive the active tab, wordmark, + button and dots; a shelf-colored dot replaces the left accent bar; row = dot · title · place (or type) · link icon.
+- [ ] **R2 Layout:** sticky header with search + shelf tabs only; type / place / sort move behind one Filter button (badge shows active count; options stay dynamic per shelf); inline input removed.
+- [ ] **R3 Add panel:** floating + opens a bottom sheet with a multi-line box, autocomplete pills, and Add / Review & Save (unchanged logic). Enter = new line. Android shared text opens the same sheet.
+- [ ] **R4 Been / Finished:** replace "Done" with a per-shelf label. Eat "Been here", Do "Did it": item stays in the list with a check by the place. Read "Read it", Watch "Watched", Buy "Bought": moves to a collapsed "Finished" section. Eat/Do filter gains Been: All / Not yet / Been. Same `done` field, no migration.
+- [ ] **R5 Group by place:** Eat and Do get a "By place" sort that shows place headings with counts.
+
+*Why:* the app felt utilitarian and cramped, the input took prime space, and "Done" made it feel like a task list when for restaurants and activities it's really "been there" metadata.
+
+---
+
+## Verify capture on device
 Share target and smarter URL parsing shipped (see CHANGELOG). Remaining:
 
 - [x] Share target shows up and opens the review flow (confirmed 2026-09-25)
