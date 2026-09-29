@@ -81,7 +81,8 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
           {been && <CheckIcon className="w-4 h-4" />}
           {place || typeLabel}
         </span>
-        {note.fields.url && (
+        {/* Fixed-width slot, empty without a link, so types line up down the right edge */}
+        {note.fields.url ? (
           <a
             href={note.fields.url}
             target="_blank"
@@ -92,6 +93,8 @@ export function NoteCard({ note, onEdit, onDelete, onToggleDone, expanded, onTog
           >
             <ExternalLinkIcon className="w-[17px] h-[17px]" />
           </a>
+        ) : (
+          <span className="shrink-0 w-[17px]" aria-hidden="true" />
         )}
       </div>
 

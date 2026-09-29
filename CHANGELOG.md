@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-28 — Aligned row types
+
+- Compact rows keep a fixed slot for the link icon, empty when there's no link, so types and places end at the same right edge. *Why:* the icon pushed the label left on linked rows, which broke scanning down the right side.
+
 ## 2026-09-27 — By place (redesign R5)
 
 - Eat and Do get a **By place** sort: headings per place with counts, biggest first, "No place" last. Optional; Newest first stays the default, and the choice falls back to newest on other shelves. *Why:* on those shelves the question is often "where am I going", and grouping lets you scan every place at once. Redesign mockup: https://claude.ai/artifact/75Jeky6r8doTDjqzj8JDum
