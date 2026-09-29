@@ -4,6 +4,7 @@ import { CATEGORIES } from '@/types';
 import {
   SHELVES, SHELF_TYPES, isShelf, lookupAlias, resolveShelf, resolveType, matchesSearch, normalizeDraft,
   stripHomeState, locationKey, formatLocation, knownLocations, DONE_LABELS, isFinished, groupByPlace,
+  countTypes, matchesType, NO_TYPE,
 } from './notes';
 
 const note = (over: Partial<Note>): Note => ({
@@ -71,6 +72,31 @@ describe('resolveType', () => {
 
   it('returns null when only the shelf is known', () => {
     expect(resolveType(note({ tags: ['eat'] }))).toBeNull();
+  });
+});
+
+describe('type filter', () => {
+  const book = note({ tags: ['read'], type: 'book' });
+  const untyped = note({ tags: ['read'] });
+  const odd = note({ tags: ['read'], type: 'zine' });
+
+  it('lists every shelf type in picker order, then extras, then No type', () => {
+    expect(countTypes([book, untyped, untyped, odd], 'read')).toEqual([
+      ...SHELF_TYPES.read.map(t => [t, t === 'book' ? 1 : 0]),
+      ['zine', 1],
+      [NO_TYPE, 2],
+    ]);
+  });
+
+  it('lists only present types with no shelf', () => {
+    expect(countTypes([book, untyped], null)).toEqual([['book', 1]]);
+  });
+
+  it('matches No type, a type, or anything', () => {
+    expect(matchesType(untyped, NO_TYPE)).toBe(true);
+    expect(matchesType(book, NO_TYPE)).toBe(false);
+    expect(matchesType(book, 'book')).toBe(true);
+    expect(matchesType(untyped, '')).toBe(true);
   });
 });
 

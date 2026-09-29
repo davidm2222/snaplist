@@ -4,6 +4,10 @@ What shipped and why, newest first. Future work lives in [PLAN.md](./PLAN.md).
 
 ---
 
+## 2026-09-28 — Type filter always on
+
+- On shelves with types, the Type filter always shows every type (zero counts included) plus **No type**. *Why:* it used to appear only once two types were present, so shelves with mostly untyped notes had no filter, and there was no way to find the untyped ones to fix them.
+
 ## 2026-09-28 — Aligned row types
 
 - Compact rows keep a fixed slot for the link icon, empty when there's no link, so types and places end at the same right edge. *Why:* the icon pushed the label left on linked rows, which broke scanning down the right side.

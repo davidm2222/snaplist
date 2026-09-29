@@ -59,6 +59,32 @@ export function resolveType(note: Pick<Note, 'tags' | 'type'>): string | null {
   return lookupAlias(raw)?.type ?? raw;
 }
 
+// Type filter value for notes with no type
+export const NO_TYPE = '_none';
+
+export function matchesType(note: Pick<Note, 'tags' | 'type'>, filter: string): boolean {
+  if (!filter) return true;
+  const type = resolveType(note);
+  return filter === NO_TYPE ? type === null : type === filter;
+}
+
+// Type filter counts. On a shelf with types, every type is listed (zero counts included),
+// in picker order, then any off-list types, then "No type". Elsewhere only types present.
+export function countTypes(notes: Pick<Note, 'tags' | 'type'>[], shelf: CategoryKey | null): [string, number][] {
+  const known = shelf ? SHELF_TYPES[shelf] : [];
+  const counts = new Map<string, number>(known.map(t => [t, 0]));
+  let untyped = 0;
+  for (const note of notes) {
+    const type = resolveType(note);
+    if (type) counts.set(type, (counts.get(type) ?? 0) + 1);
+    else untyped++;
+  }
+  const extra = [...counts.keys()].filter(t => !known.includes(t)).sort();
+  const result: [string, number][] = [...known, ...extra].map(t => [t, counts.get(t)!]);
+  if (known.length) result.push([NO_TYPE, untyped]);
+  return result;
+}
+
 // Every whitespace-separated term must appear somewhere in the note.
 // Searches current content only — not `raw`, which can be stale after edits.
 export function matchesSearch(note: Note, query: string): boolean {

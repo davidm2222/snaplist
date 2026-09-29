@@ -16,7 +16,7 @@ import { ReviewModal } from './ReviewModal';
 import { FilterBar, FilterOption, SortOrder, BeenFilter } from './FilterBar';
 import { CategoryIcon, SearchIcon, CheckCircleIcon, ChevronDownIcon, PlusIcon } from './Icons';
 import { hasKnownPrefix, isBareUrl, parseNote } from '@/lib/parseNote';
-import { resolveShelf, resolveType, matchesSearch, knownLocations, locationKey, formatLocation, isFinished, doneStaysInList, groupByPlace } from '@/lib/notes';
+import { resolveShelf, matchesType, countTypes, NO_TYPE, matchesSearch, knownLocations, locationKey, formatLocation, isFinished, doneStaysInList, groupByPlace } from '@/lib/notes';
 
 // Android share target (see manifest.ts) opens /?title=&text=&url=.
 // Apps often put the link inside `text` rather than `url`.
@@ -88,12 +88,11 @@ export function SnapList() {
       ? notes.filter(note => matchesSearch(note, searchQuery))
       : activeTab === 'all' ? notes : notes.filter(note => resolveShelf(note) === activeTab);
 
-    const typeCounts = new Map<string, number>();
+    const unfinished = base.filter(note => !isFinished(note));
+    const typeShelf = searchQuery.trim() || activeTab === 'all' ? null : activeTab;
+    const typeCounts = new Map(countTypes(unfinished, typeShelf));
     const placeCounts = new Map<string, number>();
-    for (const note of base) {
-      if (isFinished(note)) continue;
-      const type = resolveType(note);
-      if (type) typeCounts.set(type, (typeCounts.get(type) ?? 0) + 1);
+    for (const note of unfinished) {
       if (note.fields.location) {
         const key = locationKey(note.fields.location);
         placeCounts.set(key, (placeCounts.get(key) ?? 0) + 1);
@@ -104,11 +103,10 @@ export function SnapList() {
     if (placeFilter && !placeCounts.has(placeFilter)) placeCounts.set(placeFilter, 0);
     const toOptions = (counts: Map<string, number>, label: (v: string) => string): FilterOption[] =>
       [...counts.entries()]
-        .map(([value, count]) => ({ value, label: label(value), count }))
-        .sort((a, b) => a.label.localeCompare(b.label));
+        .map(([value, count]) => ({ value, label: label(value), count }));
 
     let filtered = base;
-    if (typeFilter) filtered = filtered.filter(note => resolveType(note) === typeFilter);
+    if (typeFilter) filtered = filtered.filter(note => matchesType(note, typeFilter));
     if (placeFilter) {
       filtered = filtered.filter(note => note.fields.location && locationKey(note.fields.location) === placeFilter);
     }
@@ -122,8 +120,9 @@ export function SnapList() {
       activeNotes: filtered.filter(n => !isFinished(n)),
       doneNotes: filtered.filter(isFinished),
       baseCount: base.length,
-      typeOptions: toOptions(typeCounts, v => v.charAt(0).toUpperCase() + v.slice(1)),
-      placeOptions: toOptions(placeCounts, formatLocation),
+      // Types keep countTypes order (picker order, "No type" last); places sort A–Z
+      typeOptions: toOptions(typeCounts, v => v === NO_TYPE ? 'No type' : v.charAt(0).toUpperCase() + v.slice(1)),
+      placeOptions: toOptions(placeCounts, formatLocation).sort((a, b) => a.label.localeCompare(b.label)),
     };
   }, [notes, activeTab, searchQuery, typeFilter, placeFilter, beenFilter, showBeenFilter, sort]);
 
